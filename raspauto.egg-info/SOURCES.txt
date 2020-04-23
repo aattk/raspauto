@@ -1,0 +1,8 @@
+README.md
+setup.py
+raspauto/__init__.py
+raspauto.egg-info/PKG-INFO
+raspauto.egg-info/SOURCES.txt
+raspauto.egg-info/dependency_links.txt
+raspauto.egg-info/requires.txt
+raspauto.egg-info/top_level.txt

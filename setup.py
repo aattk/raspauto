@@ -8,7 +8,7 @@ with open('HISTORY.md') as history_file:
 
 setup_args = dict(
     name='raspauto',
-    version='0.0.1',
+    version='0.1.1',
     description='Raspberry Automation Library',
     long_description_content_type="text/markdown",
     long_description=README + '\n\n' + HISTORY,
@@ -22,8 +22,7 @@ setup_args = dict(
 )
 
 install_requires = [
-    'elasticsearch>=6.0.0,<7.0.0',
-    'jinja2'
+    'pyrebase'
 ]
 
 if __name__ == '__main__':
