@@ -6,6 +6,7 @@ class set:
         self.fid = firebase_id
         self.fsecret = firebase_secret
         self.name = device_name
+        self.os = os.name
         config = {
             "apiKey": self.fsecret,
             "authDomain": self.fid+".firebaseapp.com",
@@ -16,30 +17,40 @@ class set:
         firebase = pyrebase.initialize_app(config)
         self.database = firebase.database()
         print("Baglantı Kuruldu")
-                
-    def start(self,waittime,run):
+        if self.os == "posix":
+            import RPi.GPIO as GPIO
+            GPIO.setwarnings(False)
+            GPIO.setmode(GPIO.BOARD)        
+    def auto(self,waittime,run):
         while True:
-            try:    
-                self.database.child(self.name + "Connection").set(True)
-                self.database.child(self.name + "_Temperature").set(float(open("/sys/class/thermal/thermal_zone0/temp", "r").readline()))
-                if os.name == "posix":
-                    value = self.database.child("pinsettings").get().val()
-                    pinlist = value.split("#")
-                    for itm in pinlist:
-                        item = itm.split("$")
-                        print(item[0] +" : "+item[1])
-                    if run == False:
-                        break
-                    time.sleep(waittime)
-                else:
-                    print("Device is not a Raspberry.")
-            except:
-                time.sleep(3)
-                continue
+            self.getpins()
+            if run == False:
+                break
+            time.sleep(waittime)
     def listen(self,str):
         value = self.database.child(str).get().val()
         return value
     def setdata(self,pin,value):
         self.database.child(self.name + "Connection").set(True)
-        
-        
+    def info(self):
+        return float(open("/sys/class/thermal/thermal_zone0/temp", "r").readline())
+    def getpins(self):
+        try:    
+            if os.name == "posix":
+                self.database.child(self.name + "_Connection").set(True)
+                self.database.child(self.name + "_Temperature").set(self.info())
+                value = self.database.child("pinsettings").get().val()
+                pinlist = value.split("#")
+                for itm in pinlist:
+                    item = itm.split("$")
+                    self.setpin(item[0],item[1])
+            else:
+                print("Device is not a Raspberry.")
+        except:
+            time.sleep(3)
+    def setpin(self,pin,value):
+        GPIO.setup(pin, GPIO.OUT)
+        if value == "h":
+            GPIO.output(pin,GPIO.HIGH)
+        elif value == "l":
+            GPIO.output(pin,GPIO.LOW)
