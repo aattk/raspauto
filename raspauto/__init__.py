@@ -42,14 +42,18 @@ class set:
                 pinlist = value.split("#")
                 for itm in pinlist:
                     item = itm.split("$")
-                    self.setpin(item[0],item[1])
+                    self.setpin(int(item[0]),item[1])
             else:
                 print("Device is not a Raspberry.")
         except:
             time.sleep(3)
     def setpin(self,pin,value):
-        RPi.GPIO.setup(int(pin), RPi.GPIO.OUT)
+        print(pin + type(pin))
+        print(value + type(value))
+        RPi.GPIO.setup(pin, RPi.GPIO.OUT)
         if value == "h":
-            RPi.GPIO.output(int(pin),RPi.GPIO.HIGH)
+            RPi.GPIO.output(pin,RPi.GPIO.HIGH)
+            print("high")
         elif value == "l":
-            RPi.GPIO.output(int(pin),RPi.GPIO.LOW)
+            RPi.GPIO.output(pin,RPi.GPIO.LOW)
+            print("low")
