@@ -48,8 +48,8 @@ class set:
         except:
             time.sleep(3)
     def setpin(self,pin,value):
-        RPi.GPIO.setup(pin, RPi.GPIO.OUT)
+        RPi.GPIO.setup(int(pin), RPi.GPIO.OUT)
         if value == "h":
-            RPi.GPIO.output(pin,RPi.GPIO.HIGH)
+            RPi.GPIO.output(int(pin),RPi.GPIO.HIGH)
         elif value == "l":
-            RPi.GPIO.output(pin,RPi.GPIO.LOW)
+            RPi.GPIO.output(int(pin),RPi.GPIO.LOW)
