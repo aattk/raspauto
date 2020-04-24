@@ -8,7 +8,7 @@ with open('HISTORY.md') as history_file:
 
 setup_args = dict(
     name='raspauto',
-    version='0.1.4',
+    version='0.1.5',
     description='Raspberry Automation Library',
     long_description_content_type="text/markdown",
     long_description=README + '\n\n' + HISTORY,
@@ -18,7 +18,8 @@ setup_args = dict(
     author_email='232arslan104@gmail.com',
     keywords=['raspberry', 'automotion','control'],
     url='https://github.com/aattk/raspauto',
-    download_url='https://pypi.org/project/raspauto/'
+    download_url='https://pypi.org/project/raspauto/',
+    python_requires='>=3.6',
 )
 
 install_requires = [
