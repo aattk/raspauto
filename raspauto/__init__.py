@@ -1,7 +1,7 @@
 import pyrebase
 import time
 import os
-class raspberry():
+class set():
     def __init__(self,firebase_id,firebase_secret,device_name):
         self.fid = firebase_id
         self.fsecret = firebase_secret
@@ -21,7 +21,7 @@ class raspberry():
         while True:
             try:    
                 self.database.child(self.name + "Connection").set(True)
-                self.database.child(self.name + "_Temperature").set(self.temperature())
+                self.database.child(self.name + "_Temperature").set(float(open("/sys/class/thermal/thermal_zone0/temp", "r").readline()))
                 if os.name == "posix":
                     value = self.database.child("pinsettings").get().val()
                     pinlist = value.split("#")
@@ -41,7 +41,5 @@ class raspberry():
         return value
     def setdata(self,pin,value):
         self.database.child(self.name + "Connection").set(True)
-    def temperature(self):
-        f=open("/sys/class/thermal/thermal_zone0/temp", "r")
-        return float(f.readline())
+        
         
