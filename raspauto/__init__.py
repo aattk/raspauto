@@ -1,7 +1,7 @@
 import pyrebase
 import time
 import os
-class set():
+class set:
     def __init__(self,firebase_id,firebase_secret,device_name):
         self.fid = firebase_id
         self.fsecret = firebase_secret
