@@ -1,6 +1,10 @@
 import pyrebase
 import time
 import os
+if self.os == "posix":
+    import RPi.GPIO
+    RPi.GPIO.setwarnings(False)
+    RPi.GPIO.setmode(RPi.GPIO.BOARD)
 class set:
     def __init__(self,firebase_id,firebase_secret,device_name):
         self.fid = firebase_id
@@ -16,11 +20,7 @@ class set:
         }
         firebase = pyrebase.initialize_app(config)
         self.database = firebase.database()
-        print("Baglantı Kuruldu")
-        if self.os == "posix":
-            import RPi.GPIO as GPIO
-            GPIO.setwarnings(False)
-            GPIO.setmode(GPIO.BOARD)        
+        print("Baglantı Kuruldu")        
     def auto(self,waittime,run):
         while True:
             self.getpins()
@@ -49,8 +49,8 @@ class set:
         except:
             time.sleep(3)
     def setpin(self,pin,value):
-        GPIO.setup(pin, GPIO.OUT)
+        RPi.GPIO.setup(pin, RPi.GPIO.OUT)
         if value == "h":
-            GPIO.output(pin,GPIO.HIGH)
+            RPi.GPIO.output(pin,RPi.GPIO.HIGH)
         elif value == "l":
-            GPIO.output(pin,GPIO.LOW)
+            RPi.GPIO.output(pin,RPi.GPIO.LOW)
