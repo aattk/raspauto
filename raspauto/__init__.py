@@ -41,7 +41,7 @@ class set:
                         RPi.GPIO.output(int(item[0]),RPi.GPIO.HIGH)
                     elif item[1] == "l":
                         RPi.GPIO.output(int(item[0]),RPi.GPIO.LOW)
-                    elif 0 <= item[1] <= 180:
+                    elif 2.5 <= item[1] <= 12.5:
                         self.servo(item[0],item[1])
             else:
                 print("Device is not a Raspberry.")
@@ -78,5 +78,4 @@ class set:
     def servo(self,pin,angle):
         RPi.GPIO.setup(pin, RPi.GPIO.OUT)
         p = RPi.GPIO.PWM(pin, 50)
-        pwms = float(angle)/18+2.5
-        p.start(pwms)
+        p.start(angle)
