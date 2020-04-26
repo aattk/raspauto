@@ -41,6 +41,8 @@ class set:
                         RPi.GPIO.output(int(item[0]),RPi.GPIO.HIGH)
                     elif item[1] == "l":
                         RPi.GPIO.output(int(item[0]),RPi.GPIO.LOW)
+                    elif 0 <= item[1] <= 180:
+                        self.servo(item[0],item[1])
             else:
                 print("Device is not a Raspberry.")
         except:
@@ -52,6 +54,8 @@ class set:
                 RPi.GPIO.output(pin,RPi.GPIO.HIGH)
             elif value == "l":
                 RPi.GPIO.output(pin,RPi.GPIO.LOW)
+            elif value:
+                pass
         except:
             self.database.child(self.name).child("error_log_setpin").push("Error")    
     def readpin(self,pin):
@@ -60,9 +64,19 @@ class set:
             return RPi.GPIO.input(pin)
         except:
             self.database.child(self.name).child("error_log_readpin").push("Error")
+    def cleanpin(self):
+        try:
+            RPi.GPIO.cleanup()
+        except:
+            self.database.child(self.name).child("error_log_cleanpin").push("Error")   
     def auto(self,waittime,run):
         while True:
             self.getpins()
             if run == False:
                 break
             time.sleep(waittime)
+    def servo(self,pin,angle):
+        RPi.GPIO.setup(pin, RPi.GPIO.OUT)
+        p = RPi.GPIO.PWM(pin, 50)
+        pwms = float(angle)/18+2.5
+        p.start(pwms)
