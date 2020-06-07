@@ -7,13 +7,13 @@
 
 
 ## Contents
-- [**How to Install ?**](#howtoinstallraspauto)
+- [**How to Install ?**](#how-to-install)
 - **Firebase Registration and Project creation**
 - **Functions**
 - **Websites**
 
 
-## How to install ? {#howtoinstallraspauto}
+## How to install ?
 This library works with Python 3. Please Install Python3.
 
 ``sudo apt-get install python3``
