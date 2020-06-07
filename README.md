@@ -8,12 +8,12 @@
 
 ## Contents
 - [**How to Install ?**](#how-to-install)
-- **Firebase Registration and Project creation**
-- **Functions**
-- **Websites**
+- [**Firebase Registration and Project creation**](#firebase-registration-and-project-creation)
+- [**Functions**](#functions)
+- [**Websites**](#websites)
 
 
-## How to install ?
+## How to install?
 This library works with Python 3. Please Install Python3.
 
 ``sudo apt-get install python3``
@@ -22,5 +22,18 @@ Let's load the Raspauto library using pip.
 
 ``sudo pip3 install raspauto``
 
+Create a python file and import RaspAuto.
+
+``import raspauto as rasp``
+
 ## Firebase Registration and Project creation 
 Soon... 
+
+## Functions
+``ra = rasp.set(Firebase Id,Firebase Secret Key,Device Name)``
+
+We add our own firebase information and throw it into the ra object. After that, we will do all the functions on the ra object. You can give the name you want.
+
+
+
+## Websites
