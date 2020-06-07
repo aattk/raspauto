@@ -34,6 +34,16 @@ Soon...
 
 We add our own firebase information and throw it into the ra object. After that, we will do all the functions on the ra object. You can give the name you want.
 
+``ra.auto()``
 
+It takes all pins assigned to this system and assigns them to raspberry pins. It performs the necessary reading and operations.
+
+``ra.setpin(pin_id,value)``
+
+You can assign the required value to any pin with the setpin Method. You can give the value h (High) or l (Low).
+
+``ra.readpin(pin_id)``
+
+You can read the value of any pin with the ReadPin Method.
 
 ## Websites
