@@ -1,9 +1,9 @@
-import pyrebase
+# import pyrebase
 import time
 import os
-import RPi.GPIO
-RPi.GPIO.setwarnings(False)
-RPi.GPIO.setmode(RPi.GPIO.BOARD)
+# import RPi.GPIO
+# RPi.GPIO.setwarnings(False)
+# RPi.GPIO.setmode(RPi.GPIO.BOARD)
 class set:
     def __init__(self,firebase_id,firebase_secret,device_name):
         self.fid = firebase_id
