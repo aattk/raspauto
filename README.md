@@ -1,4 +1,4 @@
-![Raspauto.png]({{site.baseurl}}/Raspauto.png)
+![Raspauto.png](/Raspauto.png)
 
 ### Remote management for smart technologies
 
