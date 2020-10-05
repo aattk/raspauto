@@ -2,9 +2,13 @@
 import time
 import os
 import telegram
-# import RPi.GPIO
-# RPi.GPIO.setwarnings(False)
-# RPi.GPIO.setmode(RPi.GPIO.BOARD)
+try:
+    import RPi.GPIO as GPIO
+    GPIO.setwarnings(False)
+    GPIO.setmode(GPIO.BOARD)
+except Exception as e:
+    print("GPIO kütüphanesi bulunamadı")
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler,Filters
 
@@ -26,6 +30,13 @@ class set:
         pin_temp = []
         for i in self.inst:
             pin = i.replace("\n","").split(" ")
+            try:
+                # GPIO kısmı 
+                GPIO.setup(int(pin[1]), GPIO.OUT)
+                # GPIO Bitiş
+            except Exception as e:
+                print(f"Hata oluştu {e}")
+            
             pin_temp = pin_temp  + [InlineKeyboardButton(pin[0], callback_data=pin[1])]
             i_counter += 1
             if i_counter == 3:
@@ -70,10 +81,14 @@ class set:
                         if str(pin_edit[2]) == str("T") :
                             new_pin = str(pin_edit[0]) +" "+ str(pin_edit[1]) +" F\n"
                             new_pins = new_pins + [new_pin]
+                            # GPIO Değer değiştirme
+                            GPIO.output(int(pin_edit[1]),0)
                             query.edit_message_text(text=pin_edit[0] + " Kapandi".format(query.data))
                         elif str(pin_edit[2]) == str("F") :
                             new_pin = str(pin_edit[0]) +" "+ str(pin_edit[1]) +" T\n"
                             new_pins = new_pins + [new_pin]
+                            # GPIO Değer değiştirme
+                            GPIO.output(int(pin_edit[1]),1)
                             query.edit_message_text(text=pin_edit[0]+ " Açildi".format(query.data))
                     else:
                         new_pins = new_pins + [str(i)]
@@ -104,10 +119,12 @@ class set:
             if login(update,context):
                 with open("pin.txt","w",encoding="utf-8") as file:
                     file.write("")
+                update.message.reply_text("Pinler Silindi.")
         def user_delete(update,context):
             if login(update,context):
                 with open("user.txt","w",encoding="utf-8") as file:
                     file.write("")
+                update.message.reply_text("Bütün Kullanıcılar Silindi")
         
 
         updater = Updater(self.tid, use_context=True)
