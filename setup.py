@@ -23,7 +23,7 @@ setup_args = dict(
 )
 
 install_requires = [
-    'pyrebase'
+    'python-telegram-bot'
 ]
 
 if __name__ == '__main__':

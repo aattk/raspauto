@@ -1,81 +1,124 @@
-# import pyrebase
+# -*- coding: utf-8 -*-
 import time
 import os
+import telegram
 # import RPi.GPIO
 # RPi.GPIO.setwarnings(False)
 # RPi.GPIO.setmode(RPi.GPIO.BOARD)
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler,Filters
+
 class set:
-    def __init__(self,firebase_id,firebase_secret,device_name):
-        self.fid = firebase_id
-        self.fsecret = firebase_secret
-        self.name = device_name
-        self.os = os.name
-        config = {
-            "apiKey": self.fsecret,
-            "authDomain": self.fid+".firebaseapp.com",
-            "databaseURL": "https://"+self.fid+".firebaseio.com",
-            "storageBucket": self.fid+".appspot.com",
-            #"serviceAccount": "path/to/serviceAccountCredentials.json"
-        }
-        firebase = pyrebase.initialize_app(config)
-        self.database = firebase.database()
-        print("Baglantı Kuruldu")        
-    def readdata(self,str):
-        value = self.database.child(self.name).child(str).get().val()
-        return value
-    def setdata(self,svar,svalue):
-        self.database.child(self.name).child(svar).set(svalue)
-    def info(self):
-        return float(open("/sys/class/thermal/thermal_zone0/temp", "r").readline())
-    def getpins(self):
-        try:    
-            if os.name == "posix":
-                self.database.child(self.name).child(self.name + "_Connection").set(True)
-                self.database.child(self.name).child(self.name + "_Temperature").set(self.info())
-                value = self.database.child(self.name).child("pinsettings").get().val()
-                pinlist = value.split("#")
-                for itm in pinlist:
-                    item = itm.split("$")
-                    RPi.GPIO.setup(int(item[0]), RPi.GPIO.OUT)
-                    if item[1] == "h":
-                        RPi.GPIO.output(int(item[0]),RPi.GPIO.HIGH)
-                    elif item[1] == "l":
-                        RPi.GPIO.output(int(item[0]),RPi.GPIO.LOW)
-                    elif 2.5 <= item[1] <= 12.5:
-                        self.servo(int(item[0]),item[1])
+    def __init__(self,telegram_id,password):
+        self.tid = telegram_id
+        self.password = password
+        self.pins = []
+        self.read_pin()
+    def read_pin(self):
+        print("Yapilandirma ayarlari yukleniyor.")
+        self.pins = [] 
+        with open("pin.txt","r",encoding="utf-8") as file:
+            self.inst = file.readlines()
+        self.re_built_list()
+        print("Yapilandirma ayarlari yuklendi.")
+    def re_built_list(self):
+        i_counter = 0
+        pin_temp = []
+        for i in self.inst:
+            pin = i.replace("\n","").split(" ")
+            pin_temp = pin_temp  + [InlineKeyboardButton(pin[0], callback_data=pin[1])]
+            i_counter += 1
+            if i_counter == 3:
+                self.pins = self.pins + [pin_temp]
+                pin_temp = []
+                i_counter = 0
+            elif i == self.inst[-1]:
+                self.pins = self.pins + [pin_temp]
+                pin_temp = []
+                i_counter = 0
+    def start(self):
+        def start(update, context):
+            if  login(update,context):
+                keyboard = self.pins
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                update.message.reply_text('Please choose:', reply_markup=reply_markup)
+            
+        def login(update, context):
+            with open("user.txt","r",encoding="utf-8") as file:
+                self.users = file.readlines()
+            if str(update.effective_chat.id)+"\n" in self.users:
+                return True
+            elif self.password == update.message.text:
+                with open("user.txt","a",encoding="utf-8") as file:
+                    file.seek(0)
+                    file.write(str(update.effective_chat.id)+"\n")
+                    update.message.reply_text("Giris Basarili.")
+                    return True
             else:
-                print("Device is not a Raspberry.")
-        except:
-            time.sleep(2)
-    def setpin(self,pin,value):
-        try:
-            RPi.GPIO.setup(pin, RPi.GPIO.OUT)
-            if value == "h":
-                RPi.GPIO.output(pin,RPi.GPIO.HIGH)
-            elif value == "l":
-                RPi.GPIO.output(pin,RPi.GPIO.LOW)
-            elif value:
-                pass
-        except:
-            self.database.child(self.name).child("error_log_setpin").push("Error")    
-    def readpin(self,pin):
-        try: 
-            RPi.GPIO.setup(pin, RPi.GPIO.IN)
-            return RPi.GPIO.input(pin)
-        except:
-            self.database.child(self.name).child("error_log_readpin").push("Error")
-    def cleanpin(self):
-        try:
-            RPi.GPIO.cleanup()
-        except:
-            self.database.child(self.name).child("error_log_cleanpin").push("Error")   
-    def auto(self,waittime,run):
-        while True:
-            self.getpins()
-            if run == False:
-                break
-            time.sleep(waittime)
-    def servo(self,pin,angle):
-        RPi.GPIO.setup(int(pin), RPi.GPIO.OUT)
-        p = RPi.GPIO.PWM(int(pin), 50)
-        p.start(float(angle))
+                update.message.reply_text("- Lutfen islem yapmak için giris yapiniz.\n\n - Giris yapmak için daha önceden olusturduGunuz sifreyi duz metin olarak mesaj atiniz.")
+                return False
+        def button(update, context):
+            if login(update,context):
+                query = update.callback_query
+                query.answer()
+                with open("pin.txt","r",encoding="utf-8") as file:
+                    pins = file.readlines()
+                new_pins = []
+                for i in pins:
+                    pin_edit = i.replace("\n","").split(" ")
+                    if str(pin_edit[1]) == str(query.data):
+                        if str(pin_edit[2]) == str("T") :
+                            new_pin = str(pin_edit[0]) +" "+ str(pin_edit[1]) +" F\n"
+                            new_pins = new_pins + [new_pin]
+                            query.edit_message_text(text=pin_edit[0] + " Kapandi".format(query.data))
+                        elif str(pin_edit[2]) == str("F") :
+                            new_pin = str(pin_edit[0]) +" "+ str(pin_edit[1]) +" T\n"
+                            new_pins = new_pins + [new_pin]
+                            query.edit_message_text(text=pin_edit[0]+ " Açildi".format(query.data))
+                    else:
+                        new_pins = new_pins + [str(i)]
+                with open("pin.txt","w",encoding = "utf-8") as file:
+                    file.writelines(new_pins)
+            
+        def help_command(update, context):
+            update.message.reply_text("Use /start to test this bot.")
+        def restart(update, context):
+            if login(update,context):
+                self.read_pin()
+                update.message.reply_text("Yeniden Baslatildi.")
+        def pin_add(update,context):
+            if login(update,context):
+                data = update.message.text.split(" ")
+                update.message.reply_text(data[1]+" "+data[2]+" "+data[3])
+                with open("pin.txt","a",encoding="utf-8") as file:
+                    file.seek(0)
+                    file.write(data[1]+" "+data[2]+" "+data[3]+"\n")
+        
+        def pin_list(update,context):
+            if login(update,context):
+                with open("pin.txt","r",encoding= "utf-8") as file:
+                    dosya = file.read()
+                    update.message.reply_text("--- Pin Bilgileri ---\n"+dosya)
+        
+        def pin_delete(update,context):
+            if login(update,context):
+                with open("pin.txt","w",encoding="utf-8") as file:
+                    file.write("")
+        def user_delete(update,context):
+            if login(update,context):
+                with open("user.txt","w",encoding="utf-8") as file:
+                    file.write("")
+        
+
+        updater = Updater(self.tid, use_context=True)
+        updater.dispatcher.add_handler(CommandHandler('start', start))
+        updater.dispatcher.add_handler(CommandHandler('pinadd', pin_add))
+        updater.dispatcher.add_handler(CommandHandler('pinlist', pin_list))
+        updater.dispatcher.add_handler(CommandHandler('pindelete', pin_delete))
+        updater.dispatcher.add_handler(CommandHandler('userdelete', user_delete))
+        updater.dispatcher.add_handler(CommandHandler('restart', restart))
+        updater.dispatcher.add_handler(CallbackQueryHandler(button))
+        updater.dispatcher.add_handler(CommandHandler('help', help_command))
+        updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, start))
+        updater.start_polling()
+        updater.idle()
