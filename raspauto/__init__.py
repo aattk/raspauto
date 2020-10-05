@@ -81,14 +81,21 @@ class set:
                         if str(pin_edit[2]) == str("T") :
                             new_pin = str(pin_edit[0]) +" "+ str(pin_edit[1]) +" F\n"
                             new_pins = new_pins + [new_pin]
-                            # GPIO Değer değiştirme
-                            GPIO.output(int(pin_edit[1]),0)
+                            try:
+                                 # GPIO Değer değiştirme
+                                GPIO.output(int(pin_edit[1]),0)
+                            except Exception as e:
+                                print("Error GPIO set")
+                           
                             query.edit_message_text(text=pin_edit[0] + " Kapandi".format(query.data))
                         elif str(pin_edit[2]) == str("F") :
                             new_pin = str(pin_edit[0]) +" "+ str(pin_edit[1]) +" T\n"
                             new_pins = new_pins + [new_pin]
-                            # GPIO Değer değiştirme
-                            GPIO.output(int(pin_edit[1]),1)
+                            try:
+                                 # GPIO Değer değiştirme
+                                GPIO.output(int(pin_edit[1]),1)
+                            except Exception as e:
+                                print("Error GPIO set")
                             query.edit_message_text(text=pin_edit[0]+ " Açildi".format(query.data))
                     else:
                         new_pins = new_pins + [str(i)]
@@ -100,7 +107,11 @@ class set:
         def restart(update, context):
             if login(update,context):
                 self.read_pin()
-                update.message.reply_text("Yeniden Baslatildi.")
+                try:
+                    GPIO.cleanup()
+                except Exception as e:
+                    print("All Pins Clean !")
+                update.message.reply_text("Yeniden Baslatildi.\nAll Pins Clean !")
         def pin_add(update,context):
             if login(update,context):
                 data = update.message.text.split(" ")
