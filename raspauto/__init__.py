@@ -150,12 +150,12 @@ class set:
                     file.write("")
                 update.message.reply_text("Bütün Kullanıcılar Silindi")
         def photo(update,context):
-            print("Photo")
+            update.message.reply_text("Photo")
             if login(update,context):
-                print("Kameraya giriş yapıldı")
+                update.message.reply_text("Kameraya giriş yapıldı")
                 try:
                     camera.capture('/home/pi/image.jpg')
-                    print("Fotoğraf çekildi")
+                    update.message.reply_text("Fotoğraf çekildi")
                 except Exception as e:
                     print("Fotoğraf çekilemedi")
                 try:
