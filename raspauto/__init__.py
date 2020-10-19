@@ -5,6 +5,7 @@ import telegram
 try:
     import RPi.GPIO as GPIO
     from picamera import PiCamera
+    camera = PiCamera()
     GPIO.setwarnings(False)
     GPIO.setmode(GPIO.BOARD)
 except Exception as e:
@@ -148,18 +149,18 @@ class set:
                 with open("user.txt","w",encoding="utf-8") as file:
                     file.write("")
                 update.message.reply_text("Bütün Kullanıcılar Silindi")
-        def takephoto(update,context):
+        def photo(update,context):
+            print("Photo")
             if login(update,context):
                 print("Kameraya giriş yapıldı")
                 try:
-                    camera = PiCamera()
                     camera.capture('/home/pi/image.jpg')
-                    time.sleep(5)
                     print("Fotoğraf çekildi")
                 except Exception as e:
                     print("Fotoğraf çekilemedi")
                 try:
-                    update.message.reply_photo(photo=open('/home/pi/image.jpg','br'))                
+                    foto = open('/home/pi/image.jpg','r')
+                    update.message.reply_photo(photo=foto)                
                     update.message.reply_text("Bütün Kullanıcılar Silindi")
                     print("Fotoğraf gönderildi")
                 except Exception as e:
@@ -173,7 +174,7 @@ class set:
         updater.dispatcher.add_handler(CommandHandler('pindelete', pin_delete))
         updater.dispatcher.add_handler(CommandHandler('userdelete', user_delete))
         updater.dispatcher.add_handler(CommandHandler('restart', restart))
-        updater.dispatcher.add_handler(CommandHandler('takephoto', takephoto))
+        updater.dispatcher.add_handler(CommandHandler('photo', photo))
         updater.dispatcher.add_handler(CallbackQueryHandler(button))
         updater.dispatcher.add_handler(CommandHandler('help', help_command))
         updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, start))
