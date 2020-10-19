@@ -149,7 +149,7 @@ class set:
                 update.message.reply_text("Bütün Kullanıcılar Silindi")
         def photo(update,context):
             if login(update,context):
-                update.message.reply_photo(chat_id=update.effective_chat.id, photo=open('/home/pi/image.jpg','rb'))                
+                update.message.reply_photo(chat_id=update.effective_chat.id, photo='https://telegram.org/img/t_logo.png')                
                 update.message.reply_text("Bütün Kullanıcılar Silindi")
 
         updater = Updater(self.tid, use_context=True)
