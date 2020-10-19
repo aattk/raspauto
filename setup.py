@@ -8,7 +8,7 @@ with open('HISTORY.md') as history_file:
 
 setup_args = dict(
     name='raspauto',
-    version='0.1.8.4',
+    version='0.1.8.5',
     description='Raspberry Automation Library and Voice Recognition',
     long_description_content_type="text/markdown",
     long_description=README + '\n\n' + HISTORY,
