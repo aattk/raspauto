@@ -197,6 +197,7 @@ class set:
         updater.dispatcher.add_handler(CommandHandler('pinlist', pin_list))
         updater.dispatcher.add_handler(CommandHandler('pindelete', pin_delete))
         updater.dispatcher.add_handler(CommandHandler('userdelete', user_delete))
+        updater.dispatcher.add_handler(CommandHandler('pinset', pinset))
         updater.dispatcher.add_handler(CommandHandler('restart', restart))
         updater.dispatcher.add_handler(CommandHandler('photo', photo))
         updater.dispatcher.add_handler(CallbackQueryHandler(button))
