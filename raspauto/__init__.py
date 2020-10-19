@@ -157,10 +157,10 @@ class set:
                 # camera.stop_preview()
                 with picamera.PiCamera() as camera:
                     camera.start_preview()
-                    time.sleep(2)
+                    time.sleep(4)
                     camera.capture('raspauto.jpg')
                     camera.stop_preview()
-                time.sleep(3)
+                    time.sleep(3)
                 update.message.reply_photo(photo=open('raspauto.jpg','rb'))   
 
         updater = Updater(self.tid, use_context=True)
