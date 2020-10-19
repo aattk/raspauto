@@ -153,7 +153,7 @@ class set:
                 try:
                     camera = PiCamera()
                     camera.capture('/home/pi/image.jpg')
-                    sleep(5)
+                    time.sleep(5)
                 except Exception as identifier:
                     print("Fotoğraf çekilemedi")
                 try:
