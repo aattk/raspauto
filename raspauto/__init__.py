@@ -132,6 +132,39 @@ class set:
                     file.seek(0)
                     file.write(data[1]+" "+data[2]+" "+data[3]+"\n")
         
+        def pinset(update,context):
+            if login(update,context):
+                data = update.message.text.split(" ")
+                with open("pin.txt","r",encoding="utf-8") as file:
+                    pins = file.readlines()
+                new_pins = []
+                for i in pins:
+                    pin_edit = i.replace("\n","").split(" ")
+                    if str(pin_edit[1]) == str(data[1]):
+                        if str(data[2]) == str("T") :
+                            new_pin = str(pin_edit[0]) +" "+ str(pin_edit[1]) +" F\n"
+                            new_pins = new_pins + [new_pin]
+                            try:
+                                 # GPIO Değer değiştirme
+                                GPIO.output(int(pin_edit[1]),0)
+                            except Exception as e:
+                                print("Error GPIO set")
+                            update.message.reply_text("Ayarlanan pin açıldı.")
+                            
+                        elif str(data[2]) == str("F") :
+                            new_pin = str(pin_edit[0]) +" "+ str(pin_edit[1]) +" T\n"
+                            new_pins = new_pins + [new_pin]
+                            try:
+                                 # GPIO Değer değiştirme
+                                GPIO.output(int(pin_edit[1]),1)
+                            except Exception as e:
+                                print("Error GPIO set")
+                            update.message.reply_text("Ayarlanan pin kapatıldı.")
+                    else:
+                        new_pins = new_pins + [str(i)]
+                with open("pin.txt","w",encoding = "utf-8") as file:
+                    file.writelines(new_pins)
+        
         def pin_list(update,context):
             if login(update,context):
                 with open("pin.txt","r",encoding= "utf-8") as file:
@@ -150,17 +183,12 @@ class set:
                 update.message.reply_text("Bütün Kullanıcılar Silindi")
         def photo(update,context):
             if login(update,context):
-                # camera = picamera.PiCamera()
-                # camera.start_preview()
-                # time.sleep(3) # hang for preview for 5 seconds
-                # camera.capture('raspauto.jpg')
-                # camera.stop_preview()
                 with picamera.PiCamera() as camera:
                     camera.start_preview()
                     time.sleep(4)
                     camera.capture('raspauto.jpg')
                     camera.stop_preview()
-                    time.sleep(3)
+                time.sleep(3)
                 update.message.reply_photo(photo=open('raspauto.jpg','rb'))   
 
         updater = Updater(self.tid, use_context=True)
