@@ -150,18 +150,19 @@ class set:
                 update.message.reply_text("Bütün Kullanıcılar Silindi")
         def photo(update,context):
             if login(update,context):
+                print("Kameraya giriş yapıldı")
                 try:
                     camera = PiCamera()
                     camera.capture('/home/pi/image.jpg')
                     time.sleep(5)
                     print("Fotoğraf çekildi")
-                except Exception as identifier:
+                except Exception as e:
                     print("Fotoğraf çekilemedi")
                 try:
-                    update.message.reply_photo(photo=open('/home/pi/image.jpg','photo'))                
+                    update.message.reply_photo(photo=open('/home/pi/image.jpg','br'))                
                     update.message.reply_text("Bütün Kullanıcılar Silindi")
                     print("Fotoğraf gönderildi")
-                except Exception as identifier:
+                except Exception as e:
                     print("Fotograf gönderilemedi")
                 
 
