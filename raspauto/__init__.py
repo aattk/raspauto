@@ -4,8 +4,6 @@ import os
 import telegram
 try:
     import RPi.GPIO as GPIO
-    from picamera import PiCamera
-    camera = PiCamera()
     GPIO.setwarnings(False)
     GPIO.setmode(GPIO.BOARD)
 except Exception as e:
@@ -150,22 +148,9 @@ class set:
                     file.write("")
                 update.message.reply_text("Bütün Kullanıcılar Silindi")
         def photo(update,context):
-            update.message.reply_text("Photo")
             if login(update,context):
-                update.message.reply_text("Kameraya giriş yapıldı")
-                try:
-                    camera.capture('/home/pi/image.jpg')
-                    update.message.reply_text("Fotoğraf çekildi")
-                except Exception as e:
-                    print("Fotoğraf çekilemedi")
-                try:
-                    foto = open('/home/pi/image.jpg','r')
-                    update.message.reply_photo(photo=foto)                
-                    update.message.reply_text("Bütün Kullanıcılar Silindi")
-                    print("Fotoğraf gönderildi")
-                except Exception as e:
-                    print("Fotograf gönderilemedi")
-                
+                update.message.reply_photo(chat_id=update.effective_chat.id, photo=open('/home/pi/image.jpg','rb'))                
+                update.message.reply_text("Bütün Kullanıcılar Silindi")
 
         updater = Updater(self.tid, use_context=True)
         updater.dispatcher.add_handler(CommandHandler('start', start))
