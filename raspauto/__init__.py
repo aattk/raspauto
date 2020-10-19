@@ -151,10 +151,9 @@ class set:
                 update.message.reply_text("Bütün Kullanıcılar Silindi")
         def photo(update,context):
             if login(update,context):
-                PiCamera.capture('raspauto.jpg')
                 camera.start_preview()
-                sleep(5) # hang for preview for 5 seconds
-                camera.capture(‘snapshot.jpg’)
+                time.sleep(5) # hang for preview for 5 seconds
+                camera.capture('raspauto.jpg')
                 camera.stop_preview()
                 time.sleep(5)
                 update.message.reply_photo(photo=open('raspauto.jpg','rb'))                
