@@ -147,7 +147,10 @@ class set:
                 with open("user.txt","w",encoding="utf-8") as file:
                     file.write("")
                 update.message.reply_text("Bütün Kullanıcılar Silindi")
-        
+        def photo(update,context):
+            if login(update,context):
+                update.send_photo(photo='https://telegram.org/img/t_logo.png')                
+                update.message.reply_text("Bütün Kullanıcılar Silindi")
 
         updater = Updater(self.tid, use_context=True)
         updater.dispatcher.add_handler(CommandHandler('start', start))
@@ -156,6 +159,7 @@ class set:
         updater.dispatcher.add_handler(CommandHandler('pindelete', pin_delete))
         updater.dispatcher.add_handler(CommandHandler('userdelete', user_delete))
         updater.dispatcher.add_handler(CommandHandler('restart', restart))
+        updater.dispatcher.add_handler(CommandHandler('photo', photo))
         updater.dispatcher.add_handler(CallbackQueryHandler(button))
         updater.dispatcher.add_handler(CommandHandler('help', help_command))
         updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, start))
