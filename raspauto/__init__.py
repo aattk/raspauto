@@ -153,13 +153,14 @@ class set:
                 try:
                     camera = PiCamera()
                     camera.capture('/home/pi/image.jpg')
+                    sleep(5)
                 except Exception as identifier:
-                    pass
+                    print("Fotoğraf çekilemedi")
                 try:
                     update.message.reply_photo(photo=open('/home/pi/image.jpg','photo'))                
                     update.message.reply_text("Bütün Kullanıcılar Silindi")
                 except Exception as identifier:
-                    pass
+                    print("Fotograf gönderilemedi")
                 
 
         updater = Updater(self.tid, use_context=True)
