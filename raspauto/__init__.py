@@ -21,10 +21,21 @@ class set:
     def read_pin(self):
         print("Yapilandirma ayarlari yukleniyor.")
         self.pins = [] 
-        with open("pin.txt","r",encoding="utf-8") as file:
-            self.inst = file.readlines()
-        self.re_built_list()
-        print("Yapilandirma ayarlari yuklendi.")
+        try:
+            with open("pin.txt","r",encoding="utf-8") as file:
+                self.inst = file.readlines()
+            self.re_built_list()
+            print("Yapilandirma ayarlari yuklendi.")
+        except Exception as e:
+            print("Yapılandırma Dosyaları Bulunamadı.")
+            self.build_file()
+        
+    def build_file(self):
+        file = open("pin.txt","a",encoding="utf-8")
+        file.close()
+        file2 = open("user.txt","a",encoding="utf-8")
+        file2.close()
+        self.read_pin()
     def re_built_list(self):
         i_counter = 0
         pin_temp = []
