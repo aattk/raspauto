@@ -4,7 +4,8 @@ import os
 import telegram
 try:
     import RPi.GPIO as GPIO
-    from picamera import PiCamera
+    import picamera
+    camera = picamera.PiCamera()
     GPIO.setwarnings(False)
     GPIO.setmode(GPIO.BOARD)
 except Exception as e:
@@ -150,7 +151,11 @@ class set:
                 update.message.reply_text("Bütün Kullanıcılar Silindi")
         def photo(update,context):
             if login(update,context):
-                PiCamera().capture('raspauto.jpg')
+                PiCamera.capture('raspauto.jpg')
+                camera.start_preview()
+                sleep(5) # hang for preview for 5 seconds
+                camera.capture(‘snapshot.jpg’)
+                camera.stop_preview()
                 time.sleep(5)
                 update.message.reply_photo(photo=open('raspauto.jpg','rb'))                
                 update.message.reply_text("Bütün Kullanıcılar Silindi")
