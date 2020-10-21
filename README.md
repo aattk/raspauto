@@ -7,8 +7,10 @@
 
 
 ## Contents
+- [**Creating a Telegram Bot**](#creating-a-telegram-bot)
 - [**How to Install ?**](#how-to-install)
-- [**Creating a Telegram Bot**](#how-to-install)
+- [**Sample Code**](#sample-code)
+- [**Telegram Bot Commands**](#Telegram-Bot-Commands)
 
 ## Creating a Telegram Bot
 
@@ -39,9 +41,13 @@ ra.start()
 |Command|Function|Usage|
 |-|-|-|
 |Every key press|It sends the defined pin lists as a button.|-|
-|/start|||
-|/pinadd|||
-|/pinlist|||
-|/pindelete|||
+|/start|It sends the defined pin lists as a button.|``/start``|
+|/pinadd|Adds pin information to the system|``/pinadd pin_name pin_number``|
+|/pinlist|It shows the pin information attached to the system.|``/pinlist``|
+|/pindelete|Deletes all registered pins|``/pindelete``|
+|/userdelete|Deletes all registered users|``/userdelete``|
+|/pinset|It is used to set up timed messages from Telegram.|``/pinset pin_number T/F``|
+|/photo|It takes and sends a photo from the Raspberry's built-in camera.|``/photo``|
+|/help|Defined functions|``/help``|
 
 
