@@ -26,11 +26,22 @@ Create a python file and import RaspAuto.
 
 ``import raspauto as rasp``
 
+## Sample Code
+
+``` python
+import raspauto
+ra = raspauto.set("telegram_bot_secret_key","bot_password")
+ra.start()
+```
+``Bot Password : You set the secret password for bot usage``
+
 ## Telegram Bot Commands
 |Command|Function|Usage|
 |-|-|-|
 |Every key press|It sends the defined pin lists as a button.|-|
-||||
-||||
+|/start|||
+|/pinadd|||
+|/pinlist|||
+|/pindelete|||
 
 
