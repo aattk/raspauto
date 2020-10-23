@@ -4,7 +4,9 @@
 ![PyPI](https://img.shields.io/pypi/v/raspauto) ![PyPI - Downloads](https://img.shields.io/pypi/dm/raspauto) ![GitHub issues](https://img.shields.io/github/issues-raw/aattk/raspauto) ![GitHub](https://img.shields.io/github/license/aattk/raspauto)
 
 ### You can access and control the pins and settings of your raspberry online.
-
+- You can talk to me on [Telegram](https://t.me/raspauto).
+- Use [Telegram](https://t.me/raspauto) for ideas.
+- Please use ["Github Issues"](https://github.com/aattk/raspauto/issues) to report bugs.
 
 ## Contents
 - [**Creating a Telegram Bot**](#creating-a-telegram-bot)
