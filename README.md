@@ -1,7 +1,7 @@
 # Raspauto
 ### Remote management for smart technologies
 
-![PyPI](https://img.shields.io/pypi/v/raspauto) ![PyPI - Downloads](https://img.shields.io/pypi/dm/raspauto) ![GitHub issues](https://img.shields.io/github/issues-raw/aattk/raspauto) ![GitHub](https://img.shields.io/github/license/aattk/raspauto)
+![PyPI](https://img.shields.io/pypi/v/raspauto) ![PyPI - Downloads](https://img.shields.io/pypi/dm/raspauto) ![GitHub issues](https://img.shields.io/github/issues-raw/aattk/raspauto) ![GitHub](https://img.shields.io/github/license/aattk/raspauto) ![Lines of code](https://img.shields.io/tokei/lines/github/aattk/raspauto) ![GitHub last commit](https://img.shields.io/github/last-commit/aattk/raspauto) ![Discord](https://img.shields.io/discord/769991474723946566)
 
 ### You can access and control the pins and settings of your raspberry online.
 
@@ -10,6 +10,8 @@
 - [**Creating a Telegram Bot**](#creating-a-telegram-bot)
 - [**How to Install ?**](#how-to-install)
 - [**Telegram Bot Commands**](#Telegram-Bot-Commands)
+
+<iframe src="https://discordapp.com/widget?id=769991474723946566&theme=dark" width="350" height="500" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
 
 ## Creating a Telegram Bot
 
