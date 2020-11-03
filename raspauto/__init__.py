@@ -129,7 +129,7 @@ class set:
             if login(update,context):
                 try:
                     data = os.system("/opt/vc/bin/vcgencmd measure_temp | cut -c6-9")
-                    update.message.reply_text("Cpu Temp : " + data)
+                    update.message.reply_text("Cpu Temp : " + str(data))
                 except Exception as e:
                     print("Error temp Function")
                     update.message.reply_text("Temp Error")
@@ -138,7 +138,7 @@ class set:
             if login(update,context):
                 try:
                     data = os.system("pip3 install raspauto --upgrade")
-                    update.message.reply_text("Update Status : " + data)
+                    update.message.reply_text("Update Status : " + str(data))
                     update.message.reply_text("Raspberry Yeniden Başlatılıyor.")
                     os.system("reboot")
                 except Exception as e:
