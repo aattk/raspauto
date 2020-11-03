@@ -133,6 +133,18 @@ class set:
                     update.message.reply_text("Cpu Temp : " + data)
                 except Exception as e:
                     print("Error temp Function")
+        
+        def libupdate(update, context):
+            if login(update,context):
+                self.read_pin()
+                try:
+                    data = os.system("pip3 install raspauto --upgrade")
+                    update.message.reply_text("Update Status : " + data)
+                    update.message.reply_text("Raspberry Yeniden Başlatılıyor.")
+                    os.system("reboot")
+                except Exception as e:
+                    print("Error Update Function")
+
                 
         def pin_add(update,context):
             if login(update,context):
@@ -211,6 +223,7 @@ class set:
         updater.dispatcher.add_handler(CommandHandler('restart', restart))
         updater.dispatcher.add_handler(CommandHandler('photo', photo))
         updater.dispatcher.add_handler(CommandHandler('temp', temp))
+        updater.dispatcher.add_handler(CommandHandler('libupdate', libupdate))
         updater.dispatcher.add_handler(CallbackQueryHandler(button))
         updater.dispatcher.add_handler(CommandHandler('help', help_command))
         updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, start))

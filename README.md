@@ -54,9 +54,13 @@ ra.start()
 |/pinset|It is used to set up timed messages from Telegram.|``/pinset pin_number T/F``|
 |/photo|Takes and sends photos.|``/photo``|
 |/help|Defined functions|``/help``|
+|/temp|Give Temp|``/temp``|
+|/libupdate|Update Raspauto and Reboot|``/libupdate``|
 ||||
 
 ## Version List 
+#### version 0.1.9.0
+- Library Update Function Added.
 #### version 0.1.8.9
 - Temp Function Added.
 #### version 0.1.8.8
