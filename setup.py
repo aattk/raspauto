@@ -3,9 +3,10 @@ from setuptools import setup, find_packages
 with open('README.md') as readme_file:
     README = readme_file.read()
 
+
 setup_args = dict(
     name='raspauto',
-    version='0.1.8.7',
+    version='0.1.8.8',
     description='Raspberry Automation Library and Voice Recognition',
     long_description_content_type="text/markdown",
     long_description=README,
@@ -20,7 +21,7 @@ setup_args = dict(
 )
 
 install_requires = [
-    'python-telegram-bot','os'
+    'python-telegram-bot'
 ]
 
 if __name__ == '__main__':
