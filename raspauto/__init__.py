@@ -127,16 +127,15 @@ class set:
                 update.message.reply_text("Yeniden Baslatiliyor.\nAll Pins Clean !")
         def temp(update, context):
             if login(update,context):
-                self.read_pin()
                 try:
                     data = os.system("/opt/vc/bin/vcgencmd measure_temp | cut -c6-9")
                     update.message.reply_text("Cpu Temp : " + data)
                 except Exception as e:
                     print("Error temp Function")
+                    update.message.reply_text("Temp Error")
         
         def libupdate(update, context):
             if login(update,context):
-                self.read_pin()
                 try:
                     data = os.system("pip3 install raspauto --upgrade")
                     update.message.reply_text("Update Status : " + data)
@@ -144,6 +143,7 @@ class set:
                     os.system("reboot")
                 except Exception as e:
                     print("Error Update Function")
+                    update.message.reply_text("Error Update Function")
 
                 
         def pin_add(update,context):
