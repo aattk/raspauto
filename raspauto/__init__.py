@@ -130,7 +130,7 @@ class set:
             if login(update,context):
                 try:
                     data = subprocess.check_output('/opt/vc/bin/vcgencmd measure_temp', shell=True)
-                    update.message.reply_text(str(data)[2:12])
+                    update.message.reply_text(str(data)[2:13])
                 except Exception as e:
                     print("Error temp Function")
                     update.message.reply_text("Temp Error")
@@ -139,7 +139,8 @@ class set:
             if login(update,context):
                 try:
                     direct_output = subprocess.check_output('pip3 install raspauto --upgrade', shell=True)
-                    update.message.reply_text(str(direct_output))
+                    data = str(direct_output).split("\n")
+                    update.message.reply_text(data[-1])
                     update.message.reply_text("Please Reboot")
                 except Exception as e:
                     print("Error Update Function")
