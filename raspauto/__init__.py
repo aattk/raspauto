@@ -125,6 +125,15 @@ class set:
                 except Exception as e:
                     print("All Pins Clean !")
                 update.message.reply_text("Yeniden Baslatiliyor.\nAll Pins Clean !")
+        def temp(update, context):
+            if login(update,context):
+                self.read_pin()
+                try:
+                    data = os.system("/opt/vc/bin/vcgencmd measure_temp | cut -c6-9")
+                    update.message.reply_text("Cpu Temp : " + data)
+                except Exception as e:
+                    print("Error temp Function")
+                
         def pin_add(update,context):
             if login(update,context):
                 data = update.message.text.split(" ")
@@ -201,6 +210,7 @@ class set:
         updater.dispatcher.add_handler(CommandHandler('pinset', pinset))
         updater.dispatcher.add_handler(CommandHandler('restart', restart))
         updater.dispatcher.add_handler(CommandHandler('photo', photo))
+        updater.dispatcher.add_handler(CommandHandler('temp', temp))
         updater.dispatcher.add_handler(CallbackQueryHandler(button))
         updater.dispatcher.add_handler(CommandHandler('help', help_command))
         updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, start))
