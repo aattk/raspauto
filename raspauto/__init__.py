@@ -125,12 +125,12 @@ class set:
                     os.system("reboot")
                 except Exception as e:
                     print("All Pins Clean !")
-                update.message.reply_text("Yeniden Baslatiliyor.\nAll Pins Clean !")
+                update.message.reply_text("Yeniden Baslatiliyor.")
         def temp(update, context):
             if login(update,context):
                 try:
                     data = subprocess.check_output('/opt/vc/bin/vcgencmd measure_temp', shell=True)
-                    update.message.reply_text(str(data))
+                    update.message.reply_text(data)
                 except Exception as e:
                     print("Error temp Function")
                     update.message.reply_text("Temp Error")
