@@ -140,8 +140,8 @@ class set:
                 try:
                     direct_output = subprocess.check_output('pip3 install raspauto --upgrade', shell=True)
                     data = str(direct_output).split("\n")
-                    update.message.reply_text(data[-1])
-                    update.message.reply_text("Please Reboot")
+                    update.message.reply_text(data[-2])
+                    update.message.reply_text("Please Reboot /restart")
                 except Exception as e:
                     print("Error Update Function")
                     update.message.reply_text("Error Update Function")
