@@ -3,15 +3,12 @@ from setuptools import setup, find_packages
 with open('README.md') as readme_file:
     README = readme_file.read()
 
-with open('HISTORY.md') as history_file:
-    HISTORY = history_file.read()
-
 setup_args = dict(
     name='raspauto',
-    version='0.1.8.6',
+    version='0.1.8.7',
     description='Raspberry Automation Library and Voice Recognition',
     long_description_content_type="text/markdown",
-    long_description=README + '\n\n' + HISTORY,
+    long_description=README,
     license='GNU',
     packages=find_packages(),
     author='Alpaslan Tetik',
@@ -23,7 +20,7 @@ setup_args = dict(
 )
 
 install_requires = [
-    'python-telegram-bot'
+    'python-telegram-bot','os'
 ]
 
 if __name__ == '__main__':

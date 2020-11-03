@@ -121,9 +121,10 @@ class set:
                 self.read_pin()
                 try:
                     GPIO.cleanup()
+                    os.system("reboot")
                 except Exception as e:
                     print("All Pins Clean !")
-                update.message.reply_text("Yeniden Baslatildi.\nAll Pins Clean !")
+                update.message.reply_text("Yeniden Baslatiliyor.\nAll Pins Clean !")
         def pin_add(update,context):
             if login(update,context):
                 data = update.message.text.split(" ")
