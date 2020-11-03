@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 import os
+import subprocess
 import telegram
 try:
     import RPi.GPIO as GPIO
@@ -128,7 +129,7 @@ class set:
         def temp(update, context):
             if login(update,context):
                 try:
-                    data = os.system("/opt/vc/bin/vcgencmd measure_temp")
+                    data = subprocess.check_output('/opt/vc/bin/vcgencmd measure_temp', shell=True)
                     update.message.reply_text(str(data))
                 except Exception as e:
                     print("Error temp Function")
@@ -137,11 +138,9 @@ class set:
         def libupdate(update, context):
             if login(update,context):
                 try:
-                    os.system("pip3 install raspauto --upgrade")
-                    data = os.system("pip3 show raspauto")
-                    update.message.reply_text(data)
-                    update.message.reply_text("Raspberry Yeniden Başlatılıyor.")
-                    os.system("reboot")
+                    direct_output = subprocess.check_output('pip3 install raspauto --upgrade', shell=True)
+                    update.message.reply_text(str(direct_output))
+                    update.message.reply_text("Please Reboot")
                 except Exception as e:
                     print("Error Update Function")
                     update.message.reply_text("Error Update Function")
