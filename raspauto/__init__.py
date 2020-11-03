@@ -130,7 +130,7 @@ class set:
             if login(update,context):
                 try:
                     data = subprocess.check_output('/opt/vc/bin/vcgencmd measure_temp', shell=True)
-                    update.message.reply_text(data)
+                    update.message.reply_text(str(data)[2:12])
                 except Exception as e:
                     print("Error temp Function")
                     update.message.reply_text("Temp Error")
