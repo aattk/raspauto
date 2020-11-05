@@ -59,6 +59,8 @@ ra.start()
 ||||
 
 ## Version List 
+#### version 0.2.0.1
+- Bug Fixed.
 #### version 0.1.9.9
 - Library Update Function Added.
 #### version 0.1.8.9

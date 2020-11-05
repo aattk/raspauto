@@ -1,0 +1,11 @@
+[Unit]
+Description=RaspAuto by aattk
+After=network.target 
+[Service] 
+ExecStart=/usr/bin/python3 -u ra.py 
+WorkingDirectory=/home/pi
+StandardOutput=inherit 
+StandardError=inherit 
+Restart=always 
+[Install] 
+WantedBy=multi-user.target

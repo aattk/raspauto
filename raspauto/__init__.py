@@ -116,7 +116,9 @@ class set:
                     file.writelines(new_pins)
             
         def help_command(update, context):
-            update.message.reply_text("Use /start to test this bot.")
+            update.message.reply_text("Creator: Alpaslan Tetik\nhttps://t.me/raspauto")
+        def commands(update, context):
+            update.message.reply_text("/start .\n/photo \n ")
         def restart(update, context):
             if login(update,context):
                 self.read_pin()
@@ -139,8 +141,7 @@ class set:
             if login(update,context):
                 try:
                     direct_output = subprocess.check_output('pip3 install raspauto --upgrade', shell=True)
-                    data = str(direct_output).split("\n")
-                    update.message.reply_text(data[-2])
+                    update.message.reply_text(direct_output.decode('utf-8'))
                     update.message.reply_text("Please Reboot /restart")
                 except Exception as e:
                     print("Error Update Function")
@@ -192,7 +193,7 @@ class set:
             if login(update,context):
                 with open("pin.txt","r",encoding= "utf-8") as file:
                     dosya = file.read()
-                    update.message.reply_text("--- Pin Bilgileri ---\n"+dosya)
+                    update.message.reply_text("--- Pin List ---\n"+dosya)
         
         def pin_delete(update,context):
             if login(update,context):
@@ -211,8 +212,8 @@ class set:
                     time.sleep(4)
                     camera.capture('raspauto.jpg')
                     camera.stop_preview()
-                time.sleep(3)
-                update.message.reply_photo(photo=open('raspauto.jpg','rb'))   
+                time.sleep(2)
+                update.message.reply_photo(photo=open('raspauto.jpg','rb'),timeout = 240)   
 
         updater = Updater(self.tid, use_context=True)
         updater.dispatcher.add_handler(CommandHandler('start', start))
@@ -224,6 +225,7 @@ class set:
         updater.dispatcher.add_handler(CommandHandler('restart', restart))
         updater.dispatcher.add_handler(CommandHandler('photo', photo))
         updater.dispatcher.add_handler(CommandHandler('temp', temp))
+        updater.dispatcher.add_handler(CommandHandler('commands', commands))
         updater.dispatcher.add_handler(CommandHandler('libupdate', libupdate))
         updater.dispatcher.add_handler(CallbackQueryHandler(button))
         updater.dispatcher.add_handler(CommandHandler('help', help_command))
