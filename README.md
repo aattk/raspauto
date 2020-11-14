@@ -12,6 +12,7 @@
 ## Contents
 - [**Creating a Telegram Bot**](#creating-a-telegram-bot)
 - [**How to Install ?**](#how-to-install)
+- [**How to add it to the beginning?**](#startup)
 - [**Telegram Bot Commands**](#Telegram-Bot-Commands)
 
 
@@ -42,6 +43,17 @@ ra.start()
 **Bot Password** : You set the secret password for bot usage.
 
 **Remember**     : You must send the password you set for the first use in plain text.
+
+## How to add it to the beginning?
+Download service file.
+
+``wget hhttps://raw.githubusercontent.com/aattk/raspauto/master/demo/ra.service``
+
+Perform the copy operation to add to the beginning.
+
+``sudo cp ra.service /etc/systemd/system/ra.service``
+
+The python file name must be ``ra.py`` for this process to work. Also, the ``ra.py`` file should be under the folder ``/home/pi''. If you want to change it yourself. You can look at the sample service file under the demo folder.
 ## Telegram Bot Commands
 |Command|Function|Usage|
 |-|-|-|
@@ -55,12 +67,20 @@ ra.start()
 |/photo|Takes and sends photos.|``/photo``|
 |/help|Defined functions|``/help``|
 |/temp|Give Temp|``/temp``|
+|/restart|Restart Raspberry|``/restart``|
 |/libupdate|Update Raspauto and Reboot|``/libupdate``|
+|/code|You use it to execute code|``/code your_code``|
 ||||
 
-## Version List 
+## Version List
+#### version 0.2.0.2
+- You can now run Code with Bot. / code
+- Replying to every message has been removed. instead it started responding to a single letter, number or /start commands. 
+- /commands Function has been edited
+- Minor Bugs fixed.
+- Restart Function Fixed.
 #### version 0.2.0.1
-- Bug Fixed.
+- Minor Bugs fixed.
 #### version 0.1.9.9
 - Library Update Function Added.
 #### version 0.1.8.9

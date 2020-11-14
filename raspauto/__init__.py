@@ -66,7 +66,15 @@ class set:
                 keyboard = self.pins
                 reply_markup = InlineKeyboardMarkup(keyboard)
                 update.message.reply_text('Please choose:', reply_markup=reply_markup)
-            
+
+        def emsg(update, context):
+            if  login(update,context):
+                msg = update.message.text
+                if len(msg) == 1:
+                    keyboard = self.pins
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                    update.message.reply_text('Please choose:', reply_markup=reply_markup)
+
         def login(update, context):
             with open("user.txt","r",encoding="utf-8") as file:
                 self.users = file.readlines()
@@ -79,7 +87,7 @@ class set:
                     update.message.reply_text("Giris Basarili.")
                     return True
             else:
-                update.message.reply_text("- Lutfen islem yapmak için giris yapiniz.\n\n - Giris yapmak için daha önceden olusturduGunuz sifreyi duz metin olarak mesaj atiniz.")
+                update.message.reply_text("Please Send Password : ")
                 return False
         def button(update, context):
             if login(update,context):
@@ -100,7 +108,7 @@ class set:
                             except Exception as e:
                                 print("Error GPIO set")
                            
-                            query.edit_message_text(text=pin_edit[0] + " Kapandi".format(query.data))
+                            query.edit_message_text(text=pin_edit[0] + " Closed".format(query.data))
                         elif str(pin_edit[2]) == str("F") :
                             new_pin = str(pin_edit[0]) +" "+ str(pin_edit[1]) +" T\n"
                             new_pins = new_pins + [new_pin]
@@ -155,7 +163,16 @@ class set:
                 with open("pin.txt","a",encoding="utf-8") as file:
                     file.seek(0)
                     file.write(data[1]+" "+data[2]+" "+data[3]+"\n")
-        
+        def code(update,context):
+            if login(update,context):
+                cd = update.message.text
+                cd = cd[6:]
+                try:
+                    data = subprocess.check_output(str(cd), shell=True)
+                    update.message.reply_text(data.decode('utf-8'))
+                except Exception as e:
+                    print("Code Run Error")
+                    update.message.reply_text("Code Run Error")
         def pinset(update,context):
             if login(update,context):
                 data = update.message.text.split(" ")
@@ -225,10 +242,11 @@ class set:
         updater.dispatcher.add_handler(CommandHandler('restart', restart))
         updater.dispatcher.add_handler(CommandHandler('photo', photo))
         updater.dispatcher.add_handler(CommandHandler('temp', temp))
+        updater.dispatcher.add_handler(CommandHandler('code', code))
         updater.dispatcher.add_handler(CommandHandler('commands', commands))
         updater.dispatcher.add_handler(CommandHandler('libupdate', libupdate))
         updater.dispatcher.add_handler(CallbackQueryHandler(button))
         updater.dispatcher.add_handler(CommandHandler('help', help_command))
-        updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, start))
+        updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, emsg))
         updater.start_polling()
         updater.idle()
