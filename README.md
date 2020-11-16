@@ -53,7 +53,7 @@ Perform the copy operation to add to the beginning.
 
 ``sudo cp ra.service /etc/systemd/system/ra.service``
 
-The python file name must be ``ra.py`` for this process to work. Also, the ``ra.py`` file should be under the folder ``/home/pi''. If you want to change it yourself. You can look at the sample service file under the demo folder.
+The python file name must be ``ra.py`` for this process to work. Also, the ``ra.py`` file should be under the folder ``/home/pi``. If you want to change it yourself. You can look at the sample service file under the demo folder.
 ## Telegram Bot Commands
 |Command|Function|Usage|
 |-|-|-|
