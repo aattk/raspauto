@@ -47,13 +47,15 @@ ra.start()
 ## How to add it to the beginning?
 Download service file.
 
-``wget hhttps://raw.githubusercontent.com/aattk/raspauto/master/demo/ra.service``
+``wget https://raw.githubusercontent.com/aattk/raspauto/master/demo/ra.service``
 
 Perform the copy operation to add to the beginning.
 
 ``sudo cp ra.service /etc/systemd/system/ra.service``
 
 The python file name must be ``ra.py`` for this process to work. Also, the ``ra.py`` file should be under the folder ``/home/pi``. If you want to change it yourself. You can look at the sample service file under the demo folder.
+
+``sudo systemctl enable ra.service``
 ## Telegram Bot Commands
 |Command|Function|Usage|
 |-|-|-|
