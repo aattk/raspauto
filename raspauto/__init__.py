@@ -110,6 +110,7 @@ class set:
             stt = "T"
             try:
                 query.edit_message_text(text=data[1] + " opened.".format(query.data))
+                GPIO.setup(int(data[0]), GPIO.OUT, initial=GPIO.LOW)
                 GPIO.output(int(data[0]), 0)
             except Exception as e:
                 query.edit_message_text("Something went wrong.".format(query.data))
@@ -117,6 +118,7 @@ class set:
             stt = "F"
             try:
                 query.edit_message_text(text=data[1] + " closed.".format(query.data))
+                GPIO.setup(int(data[0]), GPIO.OUT, initial=GPIO.LOW)
                 GPIO.output(int(data[0]), 0)
             except Exception as e:
                 query.edit_message_text("Something went wrong.".format(query.data))
