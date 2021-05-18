@@ -44,7 +44,16 @@ ra.start()
 
 **Remember**     : You must send the password you set for the first use in plain text.
 
+If there is an error in activating or deactivating the button, please give permission to write to the database with the help of the command at the bottom.
+
+``sudo chmod 777 ra.sqlite``
+
 ## How to add it to the beginning?
+Instead of the processes at the bottom, just run it as root, it will automatically add it to the startup and set the necessary database permissions.
+
+``sudo python3 ra.py``
+
+---
 Download service file.
 
 ``wget https://raw.githubusercontent.com/aattk/raspauto/master/demo/ra.service``

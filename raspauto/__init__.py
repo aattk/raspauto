@@ -25,6 +25,7 @@ class set:
         self.dbinit()
         self.pinKeyboardUpdate(1)
         self.alarm = False
+        self.addStartup()
 
     def dbinit(self):
         if(not os.path.isfile("ra.sqlite")):
@@ -41,6 +42,14 @@ class set:
         im.execute("INSERT INTO users VALUES ('"+str(id)+"', '"+name+"')")
         db.commit()
         db.close()
+
+    def addStartup(self):
+        if(not os.path.isfile("/etc/systemd/system/ra.service")):
+            os.system("wget https://raw.githubusercontent.com/aattk/raspauto/master/demo/ra.service")     
+            os.system("sudo cp ra.service /etc/systemd/system/ra.service")
+            os.system("sudo systemctl enable ra.service")
+            os.system("sudo chmod 777 ra.sqlite")
+
 
     def readUsers(self):
         db = sql.connect('ra.sqlite')
@@ -114,11 +123,12 @@ class set:
             except Exception as e:
                 print(e)
                 query.edit_message_text("Something went wrong.".format(query.data))
-        else: 
+        elif (data[2] == 'T'):
             stt = "F"
             try:
                 GPIO.output(int(data[0]), GPIO.LOW)
                 query.edit_message_text(text=data[1] + " closed.".format(query.data))
+                im.execute("UPDATE pins SET state = '"+stt+"' WHERE id='"+str(id)+"'")
             except Exception as e:
                 print(e)
                 query.edit_message_text("Something went wrong.".format(query.data))
