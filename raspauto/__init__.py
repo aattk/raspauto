@@ -108,14 +108,14 @@ class set:
             stt = "T"
             try:
                 query.edit_message_text(text=data[1] + " opened.".format(query.data))
-                GPIO.output(int(data[0]), 0)
+                GPIO.output(int(data[0]), GPIO.HIGH)
             except Exception as e:
                 query.edit_message_text("Something went wrong.".format(query.data))
         else: 
             stt = "F"
             try:
                 query.edit_message_text(text=data[1] + " closed.".format(query.data))
-                GPIO.output(int(data[0]), 0)
+                GPIO.output(int(data[0]), GPIO.LOW)
             except Exception as e:
                 query.edit_message_text("Something went wrong.".format(query.data))
         im.execute("UPDATE pins SET state = '"+stt+"' WHERE id='"+str(id)+"'")
@@ -138,7 +138,7 @@ class set:
                 if (i[2] == 'T'):
                     GPIO.output(int(i[0]), GPIO.HIGH)
                 else:
-                    GPIO.output(i, GPIO.LOW)
+                    GPIO.output(int(i[0]), GPIO.LOW)
         except Exception  as e:
             print(e)
         return data
