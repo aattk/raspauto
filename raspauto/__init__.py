@@ -134,10 +134,11 @@ class set:
         try:
             GPIO.cleanup()
             for i in data:
+                GPIO.setup(int(i[0]), GPIO.OUT)
                 if (i[2] == 'T'):
-                    GPIO.setup(int(i[0]), GPIO.OUT, initial=1)
+                    GPIO.output(int(i[0]), GPIO.HIGH)
                 else:
-                    GPIO.setup(int(i[0]), GPIO.OUT, initial=0)
+                    GPIO.output(i, GPIO.LOW)
         except Exception  as e:
             print(e)
         return data
