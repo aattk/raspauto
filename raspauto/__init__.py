@@ -24,6 +24,7 @@ class set:
         self.pins = []
         self.dbinit()
         self.pinKeyboardUpdate(1)
+        self.alarm = False
 
     def dbinit(self):
         if(not os.path.isfile("ra.sqlite")):
@@ -107,18 +108,20 @@ class set:
         if (data[2] == 'F'):
             stt = "T"
             try:
-                query.edit_message_text(text=data[1] + " opened.".format(query.data))
                 GPIO.output(int(data[0]), GPIO.HIGH)
+                query.edit_message_text(text=data[1] + " opened.".format(query.data))
+                im.execute("UPDATE pins SET state = '"+stt+"' WHERE id='"+str(id)+"'")
             except Exception as e:
+                print(e)
                 query.edit_message_text("Something went wrong.".format(query.data))
         else: 
             stt = "F"
             try:
-                query.edit_message_text(text=data[1] + " closed.".format(query.data))
                 GPIO.output(int(data[0]), GPIO.LOW)
+                query.edit_message_text(text=data[1] + " closed.".format(query.data))
             except Exception as e:
+                print(e)
                 query.edit_message_text("Something went wrong.".format(query.data))
-        im.execute("UPDATE pins SET state = '"+stt+"' WHERE id='"+str(id)+"'")
         db.commit()
         db.close()
             
@@ -130,8 +133,8 @@ class set:
         data = im.fetchall()
         db.close()
         try:
-            GPIO.cleanup()
             GPIO.setwarnings(False)
+            GPIO.cleanup()
             GPIO.setmode(GPIO.BOARD)
             for i in data:
                 GPIO.setup(int(i[0]), GPIO.OUT)

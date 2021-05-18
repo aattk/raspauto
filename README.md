@@ -77,7 +77,7 @@ The python file name must be ``ra.py`` for this process to work. Also, the ``ra.
 ||||
 
 ## Version List
-#### version 0.2.1.4 18/05/2021 22:26
+#### version 0.2.2.x 18/05/2021 22:26
 - Database has been used.
 - Pin and user deletion has been updated.
 - The /pinset command has been removed. Development continues for the new command.
