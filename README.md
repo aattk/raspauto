@@ -63,18 +63,26 @@ The python file name must be ``ra.py`` for this process to work. Also, the ``ra.
 |/start|It sends the defined pin lists as a button.|``/start``|
 |/pinadd|Adds pin information to the system|``/pinadd pin_name pin_number``|
 |/pinlist|It shows the pin information attached to the system.|``/pinlist``|
-|/pindelete|Deletes all registered pins|``/pindelete``|
-|/userdelete|Deletes all registered users|``/userdelete``|
-|/pinset|It is used to set up timed messages from Telegram.|``/pinset pin_number T/F``|
+|/userlist|It shows the user information attached to the system.|``/userlist``|
+|/pindelete|Starts the Pin Delete process.|``/pindelete``|
+|/userdelete|Starts the User Delete process.|``/userdelete``|
+|/rename|Used to name the user.|``/rename name``|
 |/photo|Takes and sends photos.|``/photo``|
 |/help|Defined functions|``/help``|
 |/temp|Give Temp|``/temp``|
 |/restart|Restart Raspberry|``/restart``|
 |/libupdate|Update Raspauto and Reboot|``/libupdate``|
 |/code|You use it to execute code|``/code your_code``|
+|/commands|Defined command list|``/commands``|
 ||||
 
 ## Version List
+#### version 0.2.1.0 18/05/2021 22:26
+- Database has been used.
+- Pin and user deletion has been updated.
+- The /pinset command has been removed. Development continues for the new command.
+- Minor bugs fixed.
+
 #### version 0.2.0.2
 - You can now run Code with Bot. / code
 - Replying to every message has been removed. instead it started responding to a single letter, number or /start commands. 

@@ -2,7 +2,11 @@
 import time
 import os
 import subprocess
+from threading import Thread
 import telegram
+import cv2
+import sqlite3 as sql
+
 try:
     import RPi.GPIO as GPIO
     import picamera
@@ -12,159 +16,252 @@ except Exception as e:
     print("GPIO kütüphanesi bulunamadı")
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler,Filters
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
+
 
 class set:
-    def __init__(self,telegram_id,password):
+    def __init__(self, telegram_id, password):
         self.tid = telegram_id
         self.password = password
         self.pins = []
-        self.read_pin()
-    def read_pin(self):
-        print("Yapilandirma ayarlari yukleniyor.")
-        self.pins = [] 
-        try:
-            with open("pin.txt","r",encoding="utf-8") as file:
-                self.inst = file.readlines()
-            self.re_built_list()
-            print("Yapilandirma ayarlari yuklendi.")
-        except Exception as e:
-            print("Yapılandırma Dosyaları Bulunamadı.")
-            self.build_file()
-        
-    def build_file(self):
-        file = open("pin.txt","a",encoding="utf-8")
-        file.close()
-        file2 = open("user.txt","a",encoding="utf-8")
-        file2.close()
-        self.read_pin()
-    def re_built_list(self):
+        self.dbinit()
+        self.pinKeyboardUpdate(1)
+
+    def dbinit(self):
+        if(not os.path.isfile("ra.sqlite")):
+            db = sql.connect('ra.sqlite')
+            im = db.cursor()
+            im.execute("CREATE TABLE users (id, name)")
+            im.execute("CREATE TABLE pins (id,name,state)")
+            im.execute("CREATE TABLE alarm (id,state)")
+            im.execute("CREATE TABLE language (lcode,data)")
+
+    def saveUser(self,id,name):
+        db = sql.connect('ra.sqlite')
+        im = db.cursor()
+        im.execute("INSERT INTO users VALUES ('"+str(id)+"', '"+name+"')")
+        db.commit()
+        db.close()
+
+    def readUsers(self):
+        db = sql.connect('ra.sqlite')
+        im = db.cursor()
+        im.execute("SELECT * FROM users")
+        data = im.fetchall()
+        db.close()
+        return data
+
+    def renameUser(self,id,name):
+        db = sql.connect('ra.sqlite')
+        im = db.cursor()
+        im.execute("UPDATE users SET name = '"+name+"' WHERE id='"+str(id)+"'")
+        db.commit()
+        db.close()
+
+    def isLogin(self,id):
+        db = sql.connect('ra.sqlite')
+        im = db.cursor()
+        im.execute("SELECT * FROM users where id = '"+str(id)+"'")
+        data = im.fetchall()
+        db.close()
+        if len(data) > 0:
+            return True
+        else:
+            return False
+    
+    def savePin(self,data):
+        data = data.split(" ")
+        if len(data) > 1:
+            db = sql.connect('ra.sqlite')
+            im = db.cursor()
+            im.execute("INSERT INTO pins VALUES ('"+str(data[2])+"', '"+str(data[1])+"','F')")
+            db.commit()
+            db.close()
+            return True
+        else: 
+            return False
+
+    def deletePin(self,id,query):
+        db = sql.connect('ra.sqlite')
+        im = db.cursor()
+        im.execute("SELECT * FROM pins where id = '"+str(id)+"'")
+        data = im.fetchone()
+        im.execute("DELETE FROM pins WHERE id = '"+str(id)+"'")
+        query.edit_message_text(text= data[1] + " deleted.".format(query.data))
+        db.commit()
+        db.close()
+
+    def deleteUser(self,id,query):
+        db = sql.connect('ra.sqlite')
+        im = db.cursor()
+        im.execute("SELECT * FROM users where id = '"+str(id)+"'")
+        data = im.fetchone()
+        im.execute("DELETE FROM users WHERE id = '"+str(id)+"'")
+        query.edit_message_text(text= data[1] + " deleted.".format(query.data))
+        db.commit()
+        db.close()
+
+    def updatePinState(self,id,query):
+        db = sql.connect('ra.sqlite')
+        im = db.cursor()
+        im.execute("SELECT * FROM pins where id = '"+str(id)+"'")
+        data = im.fetchone()
+        if (data[2] == 'F'):
+            stt = "T"
+            try:
+                query.edit_message_text(text=data[1] + " opened.".format(query.data))
+                GPIO.output(int(data[0]), 0)
+            except Exception as e:
+                query.edit_message_text("Something went wrong.".format(query.data))
+        else: 
+            stt = "F"
+            try:
+                query.edit_message_text(text=data[1] + " closed.".format(query.data))
+                GPIO.output(int(data[0]), 0)
+            except Exception as e:
+                query.edit_message_text("Something went wrong.".format(query.data))
+        im.execute("UPDATE pins SET state = '"+stt+"' WHERE id='"+str(id)+"'")
+        db.commit()
+        db.close()
+            
+    
+    def readPins(self):
+        db = sql.connect('ra.sqlite')
+        im = db.cursor()
+        im.execute("SELECT * FROM pins")
+        data = im.fetchall()
+        db.close()
+        return data
+
+    def pinKeyboardUpdate(self,id):
         i_counter = 0
         pin_temp = []
-        for i in self.inst:
-            pin = i.replace("\n","").split(" ")
-            try:
-                # GPIO kısmı 
-                GPIO.setup(int(pin[1]), GPIO.OUT)
-                # GPIO Bitiş
-            except Exception as e:
-                print(f"Hata oluştu {e}")
-            
-            pin_temp = pin_temp  + [InlineKeyboardButton(pin[0], callback_data=pin[1])]
+        self.pins = []
+        dpin  = self.readPins()
+        for pin in dpin:
+            pin_temp = pin_temp + [InlineKeyboardButton(pin[1], callback_data= str(id) +"#"+pin[0])]
             i_counter += 1
             if i_counter == 3:
                 self.pins = self.pins + [pin_temp]
                 pin_temp = []
                 i_counter = 0
-            elif i == self.inst[-1]:
+            elif pin == dpin[-1]:
                 self.pins = self.pins + [pin_temp]
                 pin_temp = []
                 i_counter = 0
+    
+    def userKeyboardUpdate(self,id):
+        i_counter = 0
+        pin_temp = []
+        self.users = []
+        dpin  = self.readUsers()
+        for pin in dpin:
+            pin_temp = pin_temp + [InlineKeyboardButton(pin[1] +" / "+ pin[0], callback_data= str(id) +"#"+pin[0])]
+            i_counter += 1
+            if i_counter == 2:
+                self.users = self.users + [pin_temp]
+                pin_temp = []
+                i_counter = 0
+            elif pin == dpin[-1]:
+                self.users = self.users + [pin_temp]
+                pin_temp = []
+                i_counter = 0
+
+    def peopleTracer(self):
+        while self.alarm:
+            print("Alpaslan")
+            time.sleep(1)
+
     def start(self):
         def start(update, context):
-            if  login(update,context):
+            if login(update, context):
+                self.pinKeyboardUpdate(1)
                 keyboard = self.pins
                 reply_markup = InlineKeyboardMarkup(keyboard)
-                update.message.reply_text('Please choose:', reply_markup=reply_markup)
+                update.message.reply_text(
+                    'Please choose:', reply_markup=reply_markup)
 
         def emsg(update, context):
-            if  login(update,context):
+            if login(update, context):
                 msg = update.message.text
                 if len(msg) == 1:
+                    self.pinKeyboardUpdate(1)
                     keyboard = self.pins
                     reply_markup = InlineKeyboardMarkup(keyboard)
-                    update.message.reply_text('Please choose:', reply_markup=reply_markup)
+                    update.message.reply_text(
+                        'Please choose:', reply_markup=reply_markup)
 
         def login(update, context):
-            with open("user.txt","r",encoding="utf-8") as file:
-                self.users = file.readlines()
-            if str(update.effective_chat.id)+"\n" in self.users:
+            if self.isLogin(update.effective_chat.id):
                 return True
             elif self.password == update.message.text:
-                with open("user.txt","a",encoding="utf-8") as file:
-                    file.seek(0)
-                    file.write(str(update.effective_chat.id)+"\n")
-                    update.message.reply_text("Giris Basarili.")
-                    return True
+                self.saveUser(update.effective_chat.id,"-")
+                update.message.reply_text("Login Succesfully")
+                return True
             else:
-                update.message.reply_text("Please Send Password : ")
+                update.message.reply_text("Wrong Password")
+                update.message.reply_text("Try Again")
                 return False
+
         def button(update, context):
-            if login(update,context):
+            if login(update, context):
                 query = update.callback_query
-                query.answer()
-                with open("pin.txt","r",encoding="utf-8") as file:
-                    pins = file.readlines()
-                new_pins = []
-                for i in pins:
-                    pin_edit = i.replace("\n","").split(" ")
-                    if str(pin_edit[1]) == str(query.data):
-                        if str(pin_edit[2]) == str("T") :
-                            new_pin = str(pin_edit[0]) +" "+ str(pin_edit[1]) +" F\n"
-                            new_pins = new_pins + [new_pin]
-                            try:
-                                 # GPIO Değer değiştirme
-                                GPIO.output(int(pin_edit[1]),0)
-                            except Exception as e:
-                                print("Error GPIO set")
-                           
-                            query.edit_message_text(text=pin_edit[0] + " Closed".format(query.data))
-                        elif str(pin_edit[2]) == str("F") :
-                            new_pin = str(pin_edit[0]) +" "+ str(pin_edit[1]) +" T\n"
-                            new_pins = new_pins + [new_pin]
-                            try:
-                                 # GPIO Değer değiştirme
-                                GPIO.output(int(pin_edit[1]),1)
-                            except Exception as e:
-                                print("Error GPIO set")
-                            query.edit_message_text(text=pin_edit[0]+ " Açildi".format(query.data))
-                    else:
-                        new_pins = new_pins + [str(i)]
-                with open("pin.txt","w",encoding = "utf-8") as file:
-                    file.writelines(new_pins)
-            
+                query.answer() # str(query.data)
+                aa = query.data.split("#")
+                if (aa[0] == "1"):
+                    self.updatePinState(aa[1],query)
+                elif (aa[0] == "2"):
+                    self.deletePin(aa[1],query)
+                elif (aa[0] == "3"):
+                    self.deleteUser(aa[1],query)
+
         def help_command(update, context):
-            update.message.reply_text("Creator: Alpaslan Tetik\nhttps://t.me/raspauto")
+            update.message.reply_text(
+                "Creator: Alpaslan Tetik\nhttps://t.me/raspauto")
+
         def commands(update, context):
-            update.message.reply_text("/start .\n/photo \n ")
+            update.message.reply_text("https://github.com/aattk/raspauto#telegram-bot-commands")
+
         def restart(update, context):
-            if login(update,context):
+            if login(update, context):
                 self.read_pin()
                 try:
                     GPIO.cleanup()
+                    update.message.reply_text("Yeniden Baslatiliyor.")
                     os.system("reboot")
                 except Exception as e:
                     print("All Pins Clean !")
-                update.message.reply_text("Yeniden Baslatiliyor.")
+
         def temp(update, context):
-            if login(update,context):
+            if login(update, context):
                 try:
                     data = subprocess.check_output('/opt/vc/bin/vcgencmd measure_temp', shell=True)
                     update.message.reply_text(str(data)[2:13])
                 except Exception as e:
                     print("Error temp Function")
                     update.message.reply_text("Temp Error")
-        
+
         def libupdate(update, context):
-            if login(update,context):
+            if login(update, context):
                 try:
                     direct_output = subprocess.check_output('pip3 install raspauto --upgrade', shell=True)
                     update.message.reply_text(direct_output.decode('utf-8'))
                     update.message.reply_text("Please Reboot /restart")
                 except Exception as e:
                     print("Error Update Function")
-                    update.message.reply_text("Error Update Function")
+                    update.message.reply_text("Something went wrong.")
 
-                
-        def pin_add(update,context):
-            if login(update,context):
-                data = update.message.text.split(" ")
-                update.message.reply_text(data[1]+" "+data[2]+" "+data[3])
-                with open("pin.txt","a",encoding="utf-8") as file:
-                    file.seek(0)
-                    file.write(data[1]+" "+data[2]+" "+data[3]+"\n")
-        def code(update,context):
-            if login(update,context):
+        def pinadd(update, context):
+            if login(update, context):
+                if self.savePin(update.message.text):
+                    update.message.reply_text("Successfully added")
+                else:
+                    update.message.reply_text("Something went wrong.")
+                    update.message.reply_text("Example Usage:")
+                    update.message.reply_text("/pinadd kitchen 12")
+
+        def code(update, context):
+            if login(update, context):
                 cd = update.message.text
                 cd = cd[6:]
                 try:
@@ -173,74 +270,77 @@ class set:
                 except Exception as e:
                     print("Code Run Error")
                     update.message.reply_text("Code Run Error")
-        def pinset(update,context):
-            if login(update,context):
-                data = update.message.text.split(" ")
-                with open("pin.txt","r",encoding="utf-8") as file:
-                    pins = file.readlines()
-                new_pins = []
-                for i in pins:
-                    pin_edit = i.replace("\n","").split(" ")
-                    if str(pin_edit[1]) == str(data[1]):
-                        if str(data[2]) == str("T") :
-                            new_pin = str(pin_edit[0]) +" "+ str(pin_edit[1]) +" F\n"
-                            new_pins = new_pins + [new_pin]
-                            try:
-                                 # GPIO Değer değiştirme
-                                GPIO.output(int(pin_edit[1]),0)
-                            except Exception as e:
-                                print("Error GPIO set")
-                            update.message.reply_text("Ayarlanan pin açıldı.")
-                            
-                        elif str(data[2]) == str("F") :
-                            new_pin = str(pin_edit[0]) +" "+ str(pin_edit[1]) +" T\n"
-                            new_pins = new_pins + [new_pin]
-                            try:
-                                 # GPIO Değer değiştirme
-                                GPIO.output(int(pin_edit[1]),1)
-                            except Exception as e:
-                                print("Error GPIO set")
-                            update.message.reply_text("Ayarlanan pin kapatıldı.")
-                    else:
-                        new_pins = new_pins + [str(i)]
-                with open("pin.txt","w",encoding = "utf-8") as file:
-                    file.writelines(new_pins)
+
+        def pin_list(update, context):
+            if login(update, context):
+                data = ""
+                for i in self.readPins():
+                    data = data +"Name           : " + i[1] + "\nPin Number : "+ i[0] + "\n-----------------------------------------\n" 
+                update.message.reply_text("# Defined Pin List\n-----------------------------------------\n"+data)
         
-        def pin_list(update,context):
-            if login(update,context):
-                with open("pin.txt","r",encoding= "utf-8") as file:
-                    dosya = file.read()
-                    update.message.reply_text("--- Pin List ---\n"+dosya)
+        def userList(update, context):
+            if login(update, context):
+                data = ""
+                for i in self.readUsers():
+                    data = data +"Name             : " + i[1] + "\nUser Number : "+ i[0] + "\n-----------------------------------------\n" 
+                update.message.reply_text("# User List\n-----------------------------------------\n"+data)
+
+        def pinDelete(update, context):
+            if login(update, context):
+                self.pinKeyboardUpdate(2)
+                keyboard = self.pins
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                update.message.reply_text('Please choose:', reply_markup=reply_markup)
+                update.message.reply_text("Select the pin to do the deletion.")
+
+        def user_delete(update, context):
+            if login(update, context):
+                self.userKeyboardUpdate(3)
+                keyboard = self.users
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                update.message.reply_text('Please choose:', reply_markup=reply_markup)
+                update.message.reply_text("Select the user to do the deletion.")
         
-        def pin_delete(update,context):
+        def rename(update, context):
             if login(update,context):
-                with open("pin.txt","w",encoding="utf-8") as file:
-                    file.write("")
-                update.message.reply_text("Pinler Silindi.")
-        def user_delete(update,context):
-            if login(update,context):
-                with open("user.txt","w",encoding="utf-8") as file:
-                    file.write("")
-                update.message.reply_text("Bütün Kullanıcılar Silindi")
-        def photo(update,context):
-            if login(update,context):
-                with picamera.PiCamera() as camera:
-                    camera.start_preview()
-                    time.sleep(4)
-                    camera.capture('raspauto.jpg')
-                    camera.stop_preview()
-                time.sleep(2)
-                update.message.reply_photo(photo=open('raspauto.jpg','rb'),timeout = 240)   
+                self.renameUser(update.effective_chat.id,update.message.text.split(" ")[1])
+                update.message.reply_text("Renaming is successful.")
+
+        def photo(update, context):
+            if login(update, context):
+                if self.alarm:
+                    with picamera.PiCamera() as camera:
+                        camera.start_preview()
+                        time.sleep(4)
+                        camera.capture('raspauto.jpg')
+                        camera.stop_preview()
+                    time.sleep(2)
+                    update.message.reply_photo(photo=open(
+                        'raspauto.jpg', 'rb'), timeout=240)
+        
+        def alarmstart(update,context):
+            self.alarm = True
+            self.alarmpeople = update.effective_chat.id
+            Thread(target = self.peopleTracer).start()
+
+        def alarmstop(update,context):
+            self.alarm = False
+
+
 
         updater = Updater(self.tid, use_context=True)
         updater.dispatcher.add_handler(CommandHandler('start', start))
-        updater.dispatcher.add_handler(CommandHandler('pinadd', pin_add))
+        updater.dispatcher.add_handler(CommandHandler('pinadd', pinadd))
         updater.dispatcher.add_handler(CommandHandler('pinlist', pin_list))
-        updater.dispatcher.add_handler(CommandHandler('pindelete', pin_delete))
+        updater.dispatcher.add_handler(CommandHandler('pindelete', pinDelete))
         updater.dispatcher.add_handler(CommandHandler('userdelete', user_delete))
-        updater.dispatcher.add_handler(CommandHandler('pinset', pinset))
+        updater.dispatcher.add_handler(CommandHandler('userlist', userList))
+        updater.dispatcher.add_handler(CommandHandler('rename', rename))
+        # updater.dispatcher.add_handler(CommandHandler('pinset', pinset))
         updater.dispatcher.add_handler(CommandHandler('restart', restart))
         updater.dispatcher.add_handler(CommandHandler('photo', photo))
+        updater.dispatcher.add_handler(CommandHandler('alarmstart', alarmstart))
+        updater.dispatcher.add_handler(CommandHandler('alarmstop', alarmstop))
         updater.dispatcher.add_handler(CommandHandler('temp', temp))
         updater.dispatcher.add_handler(CommandHandler('code', code))
         updater.dispatcher.add_handler(CommandHandler('commands', commands))
