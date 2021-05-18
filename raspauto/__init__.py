@@ -110,7 +110,6 @@ class set:
             stt = "T"
             try:
                 query.edit_message_text(text=data[1] + " opened.".format(query.data))
-                GPIO.setup(int(data[0]), GPIO.OUT, initial=GPIO.LOW)
                 GPIO.output(int(data[0]), 0)
             except Exception as e:
                 query.edit_message_text("Something went wrong.".format(query.data))
@@ -118,7 +117,6 @@ class set:
             stt = "F"
             try:
                 query.edit_message_text(text=data[1] + " closed.".format(query.data))
-                GPIO.setup(int(data[0]), GPIO.OUT, initial=GPIO.LOW)
                 GPIO.output(int(data[0]), 0)
             except Exception as e:
                 query.edit_message_text("Something went wrong.".format(query.data))
@@ -133,6 +131,12 @@ class set:
         im.execute("SELECT * FROM pins")
         data = im.fetchall()
         db.close()
+        try:
+            GPIO.cleanup()
+            for i in data:
+                GPIO.setup(int(i[0]), GPIO.OUT, initial=GPIO.LOW)
+        except Exception  as e:
+            print(e)
         return data
 
     def pinKeyboardUpdate(self,id):
@@ -218,21 +222,19 @@ class set:
                     self.deleteUser(aa[1],query)
 
         def help_command(update, context):
-            update.message.reply_text(
-                "Creator: Alpaslan Tetik\nhttps://t.me/raspauto")
+            update.message.reply_text("Creator: Alpaslan Tetik\nhttps://t.me/raspauto")
 
         def commands(update, context):
             update.message.reply_text("https://github.com/aattk/raspauto#telegram-bot-commands")
 
         def restart(update, context):
             if login(update, context):
-                self.read_pin()
                 try:
                     GPIO.cleanup()
-                    update.message.reply_text("Yeniden Baslatiliyor.")
+                    update.message.reply_text("Reboot Now")
                     os.system("reboot")
                 except Exception as e:
-                    print("All Pins Clean !")
+                    print("All Pins Cleaned.")
 
         def temp(update, context):
             if login(update, context):
@@ -310,15 +312,13 @@ class set:
 
         def photo(update, context):
             if login(update, context):
-                if not self.alarm:
-                    with picamera.PiCamera() as camera:
-                        camera.start_preview()
-                        time.sleep(4)
-                        camera.capture('raspauto.jpg')
-                        camera.stop_preview()
-                    time.sleep(2)
-                    update.message.reply_photo(photo=open(
-                        'raspauto.jpg', 'rb'), timeout=240)
+                with picamera.PiCamera() as camera:
+                    camera.start_preview()
+                    time.sleep(4)
+                    camera.capture('raspauto.jpg')
+                    camera.stop_preview()
+                time.sleep(2)
+                update.message.reply_photo(photo=open('raspauto.jpg', 'rb'), timeout=240)
         
         def alarmstart(update,context):
             self.alarm = True
