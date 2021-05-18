@@ -10,8 +10,6 @@ import sqlite3 as sql
 try:
     import RPi.GPIO as GPIO
     import picamera
-    GPIO.setwarnings(False)
-    GPIO.setmode(GPIO.BOARD)
 except Exception as e:
     print("GPIO kütüphanesi bulunamadı")
 
@@ -133,6 +131,8 @@ class set:
         db.close()
         try:
             GPIO.cleanup()
+            GPIO.setwarnings(False)
+            GPIO.setmode(GPIO.BOARD)
             for i in data:
                 GPIO.setup(int(i[0]), GPIO.OUT)
                 if (i[2] == 'T'):
