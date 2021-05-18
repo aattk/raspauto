@@ -6,7 +6,7 @@ with open('README.md') as readme_file:
 
 setup_args = dict(
     name='raspauto',
-    version='0.2.1.2',
+    version='0.2.1.3',
     description='Raspberry Automation Library and Voice Recognition',
     long_description_content_type="text/markdown",
     long_description=README,
@@ -21,7 +21,7 @@ setup_args = dict(
 )
 
 install_requires = [
-    'python-telegram-bot','opencv-python','numpy','os'
+    'python-telegram-bot','opencv-python','numpy'
 ]
 
 if __name__ == '__main__':
