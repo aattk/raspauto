@@ -308,7 +308,7 @@ class set:
 
         def photo(update, context):
             if login(update, context):
-                if self.alarm:
+                if not self.alarm:
                     with picamera.PiCamera() as camera:
                         camera.start_preview()
                         time.sleep(4)
