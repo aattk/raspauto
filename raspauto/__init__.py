@@ -25,7 +25,6 @@ class set:
         self.dbinit()
         self.pinKeyboardUpdate(1)
         self.alarm = False
-        self.addStartup()
 
     def dbinit(self):
         if(not os.path.isfile("ra.sqlite")):
@@ -42,14 +41,6 @@ class set:
         im.execute("INSERT INTO users VALUES ('"+str(id)+"', '"+name+"')")
         db.commit()
         db.close()
-
-    def addStartup(self):
-        if(not os.path.isfile("/etc/systemd/system/ra.service")):
-            os.system("wget https://raw.githubusercontent.com/aattk/raspauto/master/demo/ra.service")     
-            os.system("sudo cp ra.service /etc/systemd/system/ra.service")
-            os.system("sudo systemctl enable ra.service")
-            os.system("sudo chmod 777 ra.sqlite")
-
 
     def readUsers(self):
         db = sql.connect('ra.sqlite')
