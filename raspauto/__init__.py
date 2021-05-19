@@ -105,14 +105,14 @@ class set:
         im = db.cursor()
         im.execute("SELECT * FROM pins where id = '"+str(id)+"'")
         data = im.fetchone()
+        stt = ""
         if (data[2] == 'F'):
             stt = "T"
             try:
                 GPIO.output(int(data[0]), GPIO.HIGH)
                 query.edit_message_text(text=data[1] + " opened.".format(query.data))
-                im.execute("UPDATE pins SET state = '"+stt+"' WHERE id='"+str(id)+"'")
             except Exception as e:
-                print(e)
+                print("GPIO Set Error")
                 query.edit_message_text("Something went wrong.".format(query.data))
         elif (data[2] == 'T'):
             stt = "F"
@@ -121,8 +121,12 @@ class set:
                 query.edit_message_text(text=data[1] + " closed.".format(query.data))
                 im.execute("UPDATE pins SET state = '"+stt+"' WHERE id='"+str(id)+"'")
             except Exception as e:
-                print(e)
+                print("GPIO Set Error")
                 query.edit_message_text("Something went wrong.".format(query.data))
+        try:
+            im.execute("UPDATE pins SET state = '"+stt+"' WHERE id='"+str(id)+"'")
+        except Exception as e:
+            print("Save Database Error ! ")
         db.commit()
         db.close()
             
