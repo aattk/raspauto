@@ -59,7 +59,14 @@ Perform the copy operation to add to the beginning.
 
 The python file name must be ``ra.py`` for this process to work. Also, the ``ra.py`` file should be under the folder ``/home/pi``. If you want to change it yourself. You can look at the sample service file under the demo folder.
 
+We activate the service.
+
 ``sudo systemctl enable ra.service``
+
+We start the operation of the system by rebooting.
+
+``sudo reboot``
+
 ## Telegram Bot Commands
 |Command|Function|Usage|
 |-|-|-|
