@@ -27,11 +27,15 @@ After choosing a username, BotFather will send you a message containing your bot
 ## How to install?
 This library works with Python 3. Please Install Python3.
 
-``sudo apt-get install python3``
+``` 
+sudo apt-get install python3 
+```
 
 Let's load the Raspauto library using pip.
 
-``sudo pip3 install raspauto``
+```
+sudo pip3 install raspauto
+```
 
 Create a python file and write the code at the bottom
 
@@ -46,26 +50,26 @@ ra.start()
 
 If there is an error in activating or deactivating the button, please give permission to write to the database with the help of the command at the bottom.
 
-``sudo chmod 777 ra.sqlite``
+```sudo chmod 777 ra.sqlite```
 
 ## How to add it to the beginning?
 Download service file.
 
-``wget https://raw.githubusercontent.com/aattk/raspauto/master/demo/ra.service``
+```wget https://raw.githubusercontent.com/aattk/raspauto/master/demo/ra.service```
 
 Perform the copy operation to add to the beginning.
 
-``sudo cp ra.service /etc/systemd/system/ra.service``
+```sudo cp ra.service /etc/systemd/system/ra.service```
 
 The python file name must be ``ra.py`` for this process to work. Also, the ``ra.py`` file should be under the folder ``/home/pi``. If you want to change it yourself. You can look at the sample service file under the demo folder.
 
 We activate the service.
 
-``sudo systemctl enable ra.service``
+```sudo systemctl enable ra.service```
 
 We start the operation of the system by rebooting.
 
-``sudo reboot``
+```sudo reboot```
 
 ## Telegram Bot Commands
 |Command|Function|Usage|
