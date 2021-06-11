@@ -17,6 +17,10 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 
 
+HOGCV = cv2.HOGDescriptor()
+HOGCV.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
+
+
 class set:
     def __init__(self, telegram_id, password):
         self.tid = telegram_id
@@ -24,7 +28,32 @@ class set:
         self.pins = []
         self.dbinit()
         self.pinKeyboardUpdate(1)
-        self.alarm = False
+        self.updateInit()
+        
+
+    def updateInit(self):
+        updater = Updater(self.tid, use_context=True)
+        updater.dispatcher.add_handler(CommandHandler('start', self.start))
+        updater.dispatcher.add_handler(CommandHandler('pinadd', self.pinadd))
+        updater.dispatcher.add_handler(CommandHandler('pinlist', self.pin_list))
+        updater.dispatcher.add_handler(CommandHandler('pindelete', self.pinDelete))
+        updater.dispatcher.add_handler(CommandHandler('userdelete', self.user_delete))
+        updater.dispatcher.add_handler(CommandHandler('userlist', self.userList))
+        updater.dispatcher.add_handler(CommandHandler('rename', self.rename))
+        # updater.dispatcher.add_handler(CommandHandler('pinset', pinset))
+        updater.dispatcher.add_handler(CommandHandler('restart', self.restart))
+        updater.dispatcher.add_handler(CommandHandler('photo', self.photo))
+        updater.dispatcher.add_handler(CommandHandler('alarmstart', self.alarmstart))
+        updater.dispatcher.add_handler(CommandHandler('alarmstop', self.alarmstop))
+        updater.dispatcher.add_handler(CommandHandler('temp',self.temp))
+        updater.dispatcher.add_handler(CommandHandler('code', self.code))
+        updater.dispatcher.add_handler(CommandHandler('commands', self.commands))
+        updater.dispatcher.add_handler(CommandHandler('libupdate', self.libupdate))
+        updater.dispatcher.add_handler(CallbackQueryHandler(self.button))
+        updater.dispatcher.add_handler(CommandHandler('help',self.help_command))
+        updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, self.emsg))
+        updater.start_polling()
+        updater.idle()
 
     def dbinit(self):
         if(not os.path.isfile("ra.sqlite")):
@@ -184,183 +213,186 @@ class set:
                 self.users = self.users + [pin_temp]
                 pin_temp = []
                 i_counter = 0
+    def detect(self,frame):
+        bounding_box_cordinates, weights =  HOGCV.detectMultiScale(frame, winStride = (4, 4), padding = (8, 8), scale = 1.03)
+        
+        person = 1
+        for x,y,w,h in bounding_box_cordinates:
+            cv2.rectangle(frame, (x,y), (x+w,y+h), (0,255,0), 2)
+            cv2.putText(frame, f'person {person}', (x,y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255), 1)
+            person += 1
+        self.alarmpeople.message.reply_text('Please choose:')
+        cv2.putText(frame, 'Status : Detecting ', (40,40), cv2.FONT_HERSHEY_DUPLEX, 0.8, (255,0,0), 2)
+        cv2.putText(frame, f'Total Persons : {person-1}', (40,70), cv2.FONT_HERSHEY_DUPLEX, 0.8, (255,0,0), 2)
+        cv2.imshow('output', frame)
+        return frame
 
     def peopleTracer(self):
+        video = cv2.VideoCapture(0)
         while self.alarm:
-            print("Alpaslan")
-            time.sleep(1)
+            try:
+                print('Detecting people...')
+                check, frame = video.read()
+                frame = detect(frame)
+                cv2.imshow("Frame",frame)
+                key = cv2.waitKey(1)
+                if key == ord('q'):
+                    break
+            
+            except Exception as e:
+                pass
+        video.release()
+        cv2.destroyAllWindows()
 
-    def start(self):
-        def start(update, context):
-            if login(update, context):
+    def start(self,update, context):
+        if self.login(update, context):
+            self.pinKeyboardUpdate(1)
+            keyboard = self.pins
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            update.message.reply_text(
+                'Please choose:', reply_markup=reply_markup)
+
+    def emsg(self,update, context):
+        if self.login(update, context):
+            msg = update.message.text
+            if len(msg) == 1:
                 self.pinKeyboardUpdate(1)
                 keyboard = self.pins
                 reply_markup = InlineKeyboardMarkup(keyboard)
                 update.message.reply_text(
                     'Please choose:', reply_markup=reply_markup)
 
-        def emsg(update, context):
-            if login(update, context):
-                msg = update.message.text
-                if len(msg) == 1:
-                    self.pinKeyboardUpdate(1)
-                    keyboard = self.pins
-                    reply_markup = InlineKeyboardMarkup(keyboard)
-                    update.message.reply_text(
-                        'Please choose:', reply_markup=reply_markup)
+    def login(self,update, context):
+        if self.isLogin(update.effective_chat.id):
+            return True
+        elif self.password == update.message.text:
+            self.saveUser(update.effective_chat.id,"-")
+            update.message.reply_text("Login Succesfully")
+            return True
+        else:
+            update.message.reply_text("Wrong Password")
+            update.message.reply_text("Try Again")
+            return False
 
-        def login(update, context):
-            if self.isLogin(update.effective_chat.id):
-                return True
-            elif self.password == update.message.text:
-                self.saveUser(update.effective_chat.id,"-")
-                update.message.reply_text("Login Succesfully")
-                return True
+    def button(self,update, context):
+        if self.login(update, context):
+            query = update.callback_query
+            query.answer() # str(query.data)
+            aa = query.data.split("#")
+            if (aa[0] == "1"):
+                self.updatePinState(aa[1],query)
+            elif (aa[0] == "2"):
+                self.deletePin(aa[1],query)
+            elif (aa[0] == "3"):
+                self.deleteUser(aa[1],query)
+
+    def help_command(self,update, context):
+        update.message.reply_text("Creator: Alpaslan Tetik\nhttps://t.me/raspauto")
+
+    def commands(self,update, context):
+        update.message.reply_text("https://github.com/aattk/raspauto#telegram-bot-commands")
+
+    def restart(self,update, context):
+        if self.login(update, context):
+            try:
+                GPIO.cleanup()
+                update.message.reply_text("Reboot Now")
+                os.system("reboot")
+            except Exception as e:
+                print("All Pins Cleaned.")
+
+    def temp(self,update, context):
+        if self.login(update, context):
+            try:
+                data = subprocess.check_output('/opt/vc/bin/vcgencmd measure_temp', shell=True)
+                update.message.reply_text(str(data)[2:13])
+            except Exception as e:
+                print("Error temp Function")
+                update.message.reply_text("Temp Error")
+
+    def libupdate(self,update, context):
+        if self.login(update, context):
+            try:
+                direct_output = subprocess.check_output('pip3 install raspauto --upgrade', shell=True)
+                update.message.reply_text(direct_output.decode('utf-8'))
+                update.message.reply_text("Please Reboot /restart")
+            except Exception as e:
+                print("Error Update Function")
+                update.message.reply_text("Something went wrong.")
+
+    def pinadd(self,update, context):
+        if self.login(update, context):
+            if self.savePin(update.message.text):
+                update.message.reply_text("Successfully added")
             else:
-                update.message.reply_text("Wrong Password")
-                update.message.reply_text("Try Again")
-                return False
+                update.message.reply_text("Something went wrong.")
+                update.message.reply_text("Example Usage:")
+                update.message.reply_text("/pinadd kitchen 12")
 
-        def button(update, context):
-            if login(update, context):
-                query = update.callback_query
-                query.answer() # str(query.data)
-                aa = query.data.split("#")
-                if (aa[0] == "1"):
-                    self.updatePinState(aa[1],query)
-                elif (aa[0] == "2"):
-                    self.deletePin(aa[1],query)
-                elif (aa[0] == "3"):
-                    self.deleteUser(aa[1],query)
+    def code(self,update, context):
+        if self.login(update, context):
+            cd = update.message.text
+            cd = cd[6:]
+            try:
+                data = subprocess.check_output(str(cd), shell=True)
+                update.message.reply_text(data.decode('utf-8'))
+            except Exception as e:
+                print("Code Run Error")
+                update.message.reply_text("Code Run Error")
 
-        def help_command(update, context):
-            update.message.reply_text("Creator: Alpaslan Tetik\nhttps://t.me/raspauto")
+    def pin_list(self,update, context):
+        if self.login(update, context):
+            data = ""
+            for i in self.readPins():
+                data = data +"Name           : " + i[1] + "\nPin Number : "+ i[0] + "\n-----------------------------------------\n" 
+            update.message.reply_text("# Defined Pin List\n-----------------------------------------\n"+data)
+    
+    def userList(self,update, context):
+        if self.login(update, context):
+            data = ""
+            for i in self.readUsers():
+                data = data +"Name             : " + i[1] + "\nUser Number : "+ i[0] + "\n-----------------------------------------\n" 
+            update.message.reply_text("# User List\n-----------------------------------------\n"+data)
 
-        def commands(update, context):
-            update.message.reply_text("https://github.com/aattk/raspauto#telegram-bot-commands")
+    def pinDelete(self,update, context):
+        if self.login(update, context):
+            self.pinKeyboardUpdate(2)
+            keyboard = self.pins
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            update.message.reply_text('Please choose:', reply_markup=reply_markup)
+            update.message.reply_text("Select the pin to do the deletion.")
 
-        def restart(update, context):
-            if login(update, context):
-                try:
-                    GPIO.cleanup()
-                    update.message.reply_text("Reboot Now")
-                    os.system("reboot")
-                except Exception as e:
-                    print("All Pins Cleaned.")
+    def user_delete(self,update, context):
+        if self.login(update, context):
+            self.userKeyboardUpdate(3)
+            keyboard = self.users
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            update.message.reply_text('Please choose:', reply_markup=reply_markup)
+            update.message.reply_text("Select the user to do the deletion.")
+    
+    def rename(self,update, context):
+        if self.login(update,context):
+            self.renameUser(update.effective_chat.id,update.message.text.split(" ")[1])
+            update.message.reply_text("Renaming is successful.")
 
-        def temp(update, context):
-            if login(update, context):
-                try:
-                    data = subprocess.check_output('/opt/vc/bin/vcgencmd measure_temp', shell=True)
-                    update.message.reply_text(str(data)[2:13])
-                except Exception as e:
-                    print("Error temp Function")
-                    update.message.reply_text("Temp Error")
+    def photo(self,update, context):
+        if self.login(update, context):
+            with picamera.PiCamera() as camera:
+                camera.start_preview()
+                time.sleep(4)
+                camera.capture('raspauto.jpg')
+                camera.stop_preview()
+            time.sleep(2)
+            update.message.reply_photo(photo=open('raspauto.jpg', 'rb'), timeout=240)
+    
+    def alarmstart(self,update,context):
+        self.alarm = True
+        self.alarmpeople = update
+        Thread(target = self.peopleTracer).start()
 
-        def libupdate(update, context):
-            if login(update, context):
-                try:
-                    direct_output = subprocess.check_output('pip3 install raspauto --upgrade', shell=True)
-                    update.message.reply_text(direct_output.decode('utf-8'))
-                    update.message.reply_text("Please Reboot /restart")
-                except Exception as e:
-                    print("Error Update Function")
-                    update.message.reply_text("Something went wrong.")
-
-        def pinadd(update, context):
-            if login(update, context):
-                if self.savePin(update.message.text):
-                    update.message.reply_text("Successfully added")
-                else:
-                    update.message.reply_text("Something went wrong.")
-                    update.message.reply_text("Example Usage:")
-                    update.message.reply_text("/pinadd kitchen 12")
-
-        def code(update, context):
-            if login(update, context):
-                cd = update.message.text
-                cd = cd[6:]
-                try:
-                    data = subprocess.check_output(str(cd), shell=True)
-                    update.message.reply_text(data.decode('utf-8'))
-                except Exception as e:
-                    print("Code Run Error")
-                    update.message.reply_text("Code Run Error")
-
-        def pin_list(update, context):
-            if login(update, context):
-                data = ""
-                for i in self.readPins():
-                    data = data +"Name           : " + i[1] + "\nPin Number : "+ i[0] + "\n-----------------------------------------\n" 
-                update.message.reply_text("# Defined Pin List\n-----------------------------------------\n"+data)
-        
-        def userList(update, context):
-            if login(update, context):
-                data = ""
-                for i in self.readUsers():
-                    data = data +"Name             : " + i[1] + "\nUser Number : "+ i[0] + "\n-----------------------------------------\n" 
-                update.message.reply_text("# User List\n-----------------------------------------\n"+data)
-
-        def pinDelete(update, context):
-            if login(update, context):
-                self.pinKeyboardUpdate(2)
-                keyboard = self.pins
-                reply_markup = InlineKeyboardMarkup(keyboard)
-                update.message.reply_text('Please choose:', reply_markup=reply_markup)
-                update.message.reply_text("Select the pin to do the deletion.")
-
-        def user_delete(update, context):
-            if login(update, context):
-                self.userKeyboardUpdate(3)
-                keyboard = self.users
-                reply_markup = InlineKeyboardMarkup(keyboard)
-                update.message.reply_text('Please choose:', reply_markup=reply_markup)
-                update.message.reply_text("Select the user to do the deletion.")
-        
-        def rename(update, context):
-            if login(update,context):
-                self.renameUser(update.effective_chat.id,update.message.text.split(" ")[1])
-                update.message.reply_text("Renaming is successful.")
-
-        def photo(update, context):
-            if login(update, context):
-                with picamera.PiCamera() as camera:
-                    camera.start_preview()
-                    time.sleep(4)
-                    camera.capture('raspauto.jpg')
-                    camera.stop_preview()
-                time.sleep(2)
-                update.message.reply_photo(photo=open('raspauto.jpg', 'rb'), timeout=240)
-        
-        def alarmstart(update,context):
-            self.alarm = True
-            self.alarmpeople = update.effective_chat.id
-            Thread(target = self.peopleTracer).start()
-
-        def alarmstop(update,context):
-            self.alarm = False
+    def alarmstop(self,update,context):
+        self.alarm = False
 
 
 
-        updater = Updater(self.tid, use_context=True)
-        updater.dispatcher.add_handler(CommandHandler('start', start))
-        updater.dispatcher.add_handler(CommandHandler('pinadd', pinadd))
-        updater.dispatcher.add_handler(CommandHandler('pinlist', pin_list))
-        updater.dispatcher.add_handler(CommandHandler('pindelete', pinDelete))
-        updater.dispatcher.add_handler(CommandHandler('userdelete', user_delete))
-        updater.dispatcher.add_handler(CommandHandler('userlist', userList))
-        updater.dispatcher.add_handler(CommandHandler('rename', rename))
-        # updater.dispatcher.add_handler(CommandHandler('pinset', pinset))
-        updater.dispatcher.add_handler(CommandHandler('restart', restart))
-        updater.dispatcher.add_handler(CommandHandler('photo', photo))
-        updater.dispatcher.add_handler(CommandHandler('alarmstart', alarmstart))
-        updater.dispatcher.add_handler(CommandHandler('alarmstop', alarmstop))
-        updater.dispatcher.add_handler(CommandHandler('temp', temp))
-        updater.dispatcher.add_handler(CommandHandler('code', code))
-        updater.dispatcher.add_handler(CommandHandler('commands', commands))
-        updater.dispatcher.add_handler(CommandHandler('libupdate', libupdate))
-        updater.dispatcher.add_handler(CallbackQueryHandler(button))
-        updater.dispatcher.add_handler(CommandHandler('help', help_command))
-        updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, emsg))
-        updater.start_polling()
-        updater.idle()
+    
