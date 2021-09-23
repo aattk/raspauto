@@ -42,7 +42,6 @@ Create a python file and write the code at the bottom
 ``` python
 import raspauto
 ra = raspauto.set("telegram_bot_token","bot_password")
-ra.start()
 ```
 **Bot Password** : You set the secret password for bot usage.
 
