@@ -4,7 +4,6 @@ import os
 import subprocess
 from threading import Thread
 import telegram
-import cv2
 import sqlite3 as sql
 
 try:
