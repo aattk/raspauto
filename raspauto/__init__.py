@@ -27,6 +27,9 @@ class set:
         self.tid = telegram_id
         self.password = password
         self.pins = []
+        self.awatch = False
+        self.aupdate = []
+        self.acontext = []
         self.dbinit()
         self.pinKeyboardUpdate(1)
         self.updateInit()
@@ -50,6 +53,7 @@ class set:
         updater.dispatcher.add_handler(CommandHandler('code', self.code))
         updater.dispatcher.add_handler(CommandHandler('commands', self.commands))
         updater.dispatcher.add_handler(CommandHandler('libupdate', self.libupdate))
+        updater.dispatcher.add_handler(CommandHandler('alwayswatch', self.alwayswatch))
         updater.dispatcher.add_handler(CallbackQueryHandler(self.button))
         updater.dispatcher.add_handler(CommandHandler('help',self.help_command))
         updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, self.emsg))
@@ -394,3 +398,16 @@ class set:
 
     def alarmstop(self,update,context):
         self.alarm = False
+
+    def alwayswatch(self,update,context):
+        self.awatch = ~self.awatch
+        self.aupdate = update;
+        self.acontext = context;
+        update.message.reply_text(f"Always Watch {self.awatch}")
+
+    def alwaysphoto(self,update,context):
+        try:
+            while self.awatch:
+                self.photo(self,self.aupdate,self.acontext)
+        except Exception as e:
+            print(f"Bir hata olsutu. {e}")
