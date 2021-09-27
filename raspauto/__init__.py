@@ -402,12 +402,14 @@ class set:
     def alwayswatch(self,update,context):
         self.awatch = ~self.awatch
         self.aupdate = update;
-        self.acontext = context;
+        self.acontext = context;        
+        self.alwaysphoto(self.aupdate,self.acontext)
         update.message.reply_text(f"Always Watch {self.awatch}")
 
     def alwaysphoto(self,update,context):
         try:
-            while self.awatch:
-                self.photo(self,self.aupdate,self.acontext)
+            while self.awatch:  
+                self.photo(self,update,context)
+                print("Fotograf Gonderildi.")
         except Exception as e:
             print(f"Bir hata olsutu. {e}")
