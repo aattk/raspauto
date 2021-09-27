@@ -409,7 +409,7 @@ class set:
     def alwaysphoto(self,update,context):
         try:
             while self.awatch:  
-                self.photo(self,update,context)
+                self.photo(self.aupdate,self.acontext)
                 print("Fotograf Gonderildi.")
         except Exception as e:
             print(f"Bir hata olsutu. {e}")
