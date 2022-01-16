@@ -6,7 +6,7 @@ with open('README.md') as readme_file:
 
 setup_args = dict(
     name='raspauto',
-    version='0.2.2.9',
+    version='0.2.2.10',
     description='Raspberry Automation Library and Voice Recognition',
     long_description_content_type="text/markdown",
     long_description=README,

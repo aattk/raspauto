@@ -15,13 +15,6 @@ except Exception as e:
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 
-
-# try:
-#     HOGCV = cv2.HOGDescriptor()
-#     HOGCV.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
-# except Exception as e:
-#     print("OpenCV Library not found.")
-
 class set:
     def __init__(self, telegram_id, password):
         self.tid = telegram_id
@@ -37,26 +30,25 @@ class set:
 
     def updateInit(self):
         updater = Updater(self.tid, use_context=True)
-        updater.dispatcher.add_handler(CommandHandler('start', self.start))
-        updater.dispatcher.add_handler(CommandHandler('pinadd', self.pinadd))
-        updater.dispatcher.add_handler(CommandHandler('pinlist', self.pin_list))
-        updater.dispatcher.add_handler(CommandHandler('pindelete', self.pinDelete))
-        updater.dispatcher.add_handler(CommandHandler('userdelete', self.user_delete))
-        updater.dispatcher.add_handler(CommandHandler('userlist', self.userList))
-        updater.dispatcher.add_handler(CommandHandler('rename', self.rename))
-        # updater.dispatcher.add_handler(CommandHandler('pinset', pinset))
-        updater.dispatcher.add_handler(CommandHandler('restart', self.restart))
-        updater.dispatcher.add_handler(CommandHandler('photo', self.photo))
-        updater.dispatcher.add_handler(CommandHandler('alarmstart', self.alarmstart))
-        updater.dispatcher.add_handler(CommandHandler('alarmstop', self.alarmstop))
-        updater.dispatcher.add_handler(CommandHandler('temp',self.temp))
-        updater.dispatcher.add_handler(CommandHandler('code', self.code))
-        updater.dispatcher.add_handler(CommandHandler('commands', self.commands))
-        updater.dispatcher.add_handler(CommandHandler('libupdate', self.libupdate))
-        updater.dispatcher.add_handler(CommandHandler('alwayswatch', self.alwayswatch))
-        updater.dispatcher.add_handler(CallbackQueryHandler(self.button))
-        updater.dispatcher.add_handler(CommandHandler('help',self.help_command))
-        updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, self.emsg))
+        updater.dispatcher.add_handler(CommandHandler('start', self.start, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('pinadd', self.pinadd, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('pinlist', self.pin_list, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('pindelete', self.pinDelete, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('userdelete', self.user_delete, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('userlist', self.userList, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('rename', self.rename, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('restart', self.restart, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('photo', self.photo, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('alarmstart', self.alarmstart, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('alarmstop', self.alarmstop, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('temp',self.temp, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('code', self.code, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('commands', self.commands, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('libupdate', self.libupdate, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('alwayswatch', self.alwayswatch, run_async=True))
+        updater.dispatcher.add_handler(CallbackQueryHandler(self.button, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('help',self.help_command, run_async=True))
+        updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, self.emsg, run_async=True))
         updater.start_polling()
         updater.idle()
 
@@ -218,37 +210,6 @@ class set:
                 self.users = self.users + [pin_temp]
                 pin_temp = []
                 i_counter = 0
-
-    # def detect(self,frame):
-    #     bounding_box_cordinates, weights =  HOGCV.detectMultiScale(frame, winStride = (4, 4), padding = (8, 8), scale = 1.03)
-        
-    #     person = 1
-    #     for x,y,w,h in bounding_box_cordinates:
-    #         cv2.rectangle(frame, (x,y), (x+w,y+h), (0,255,0), 2)
-    #         cv2.putText(frame, f'person {person}', (x,y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255), 1)
-    #         person += 1
-    #     self.alarmpeople.message.reply_text('Please choose:')
-    #     cv2.putText(frame, 'Status : Detecting ', (40,40), cv2.FONT_HERSHEY_DUPLEX, 0.8, (255,0,0), 2)
-    #     cv2.putText(frame, f'Total Persons : {person-1}', (40,70), cv2.FONT_HERSHEY_DUPLEX, 0.8, (255,0,0), 2)
-    #     cv2.imshow('output', frame)
-    #     return frame
-
-    # def peopleTracer(self):
-    #     video = cv2.VideoCapture(0)
-    #     while self.alarm:
-    #         try:
-    #             print('Detecting people...')
-    #             check, frame = video.read()
-    #             frame = detect(frame)
-    #             cv2.imshow("Frame",frame)
-    #             key = cv2.waitKey(1)
-    #             if key == ord('q'):
-    #                 break
-            
-    #         except Exception as e:
-    #             pass
-    #     video.release()
-    #     cv2.destroyAllWindows()
 
     def start(self,update, context):
         if self.login(update, context):
