@@ -5,6 +5,9 @@ import subprocess
 from threading import Thread
 import telegram
 import sqlite3 as sql
+import speech_recognition as sr
+import time
+from gtts import gTTS
 
 try:
     import RPi.GPIO as GPIO
@@ -21,12 +24,13 @@ class set:
         self.password = password
         self.pins = []
         self.awatch = False
+        self.asistan_state = True
         self.aupdate = []
         self.acontext = []
         self.dbinit()
         self.pinKeyboardUpdate(1)
         self.updateInit()
-        
+        self.asistan()
 
     def updateInit(self):
         updater = Updater(self.tid, use_context=True)
@@ -45,6 +49,8 @@ class set:
         updater.dispatcher.add_handler(CommandHandler('code', self.code, run_async=True))
         updater.dispatcher.add_handler(CommandHandler('commands', self.commands, run_async=True))
         updater.dispatcher.add_handler(CommandHandler('libupdate', self.libupdate, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('asistan', self.asistan, run_async=True))
+        updater.dispatcher.add_handler(CommandHandler('asistan_stop', self.asistan_stop, run_async=True))
         updater.dispatcher.add_handler(CommandHandler('alwayswatch', self.alwayswatch, run_async=True))
         updater.dispatcher.add_handler(CallbackQueryHandler(self.button, run_async=True))
         updater.dispatcher.add_handler(CommandHandler('help',self.help_command, run_async=True))
@@ -374,3 +380,40 @@ class set:
                 print("Fotograf Gonderildi.")
         except Exception as e:
             print(f"Bir hata olsutu. {e}")
+    
+    def speak(self,message):
+        tts = gTTS(text=message, lang='tr')
+        tts.save("audio.mp3")
+        os.system("audio.mp3")
+
+    def recordAudio(self):
+        r = sr.Recognizer()
+        with sr.Microphone() as source:
+            print("Say something!")
+            audio = r.listen(source)
+        data = ""
+        try:
+            data = r.recognize_google(audio, language='tr-tr')
+            data = data.lower()
+        except sr.UnknownValueError:
+            print("Google Speech Recognition could not understand audio")
+        return data
+
+    def asistan(self,update,context):
+        while(self.asistan_state):
+            data = self.recordAudio()
+            self.komut_olustur(data)
+        self.asistan_state = True
+    
+    def asistan_stop(self,update,context):
+        self.asistan_state = False 
+        update.message.reply_text(f"Assistant turned off.")
+
+    def komut_olustur(self,data):
+        for i in self.readPins():
+            if i[1].lower() in data:
+                if "aç" in data:
+                    self.speak(f"{i[1]} açıldı.")
+                elif "kapat" in data:
+                    self.speak(f"{i[1]} kapatıldı.")
+
