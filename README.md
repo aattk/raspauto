@@ -84,6 +84,7 @@ sudo reboot
 |Command|Function|Usage|
 |-|-|-|
 |Every key press|It sends the defined pin lists as a button.|-|
+|/login|Allows the user to log in.|``/login your_password``|
 |/start|It sends the defined pin lists as a button.|``/start``|
 |/pinadd|Adds pin information to the system|``/pinadd pin_name pin_number``|
 |/pinlist|It shows the pin information attached to the system.|``/pinlist``|

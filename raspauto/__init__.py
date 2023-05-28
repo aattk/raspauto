@@ -1,19 +1,23 @@
 # -*- coding: utf-8 -*-
-import time
 import os
-import subprocess
-from threading import Thread
-import telegram
 import sqlite3 as sql
+import subprocess
+import time
+from threading import Thread
+
+import speech_recognition as sr
+from gtts import gTTS
 
 try:
-    import RPi.GPIO as GPIO
     import picamera
+    import RPi.GPIO as GPIO
 except Exception as e:
     print("GPIO Library not found.")
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, filters, MessageHandler, Updater
+
 
 class set:
     def __init__(self, telegram_id, password):
@@ -21,36 +25,47 @@ class set:
         self.password = password
         self.pins = []
         self.awatch = False
+        self.asistan_state = True
         self.aupdate = []
         self.acontext = []
+        self.loginErrortext = "You are not logged in. Please login with /login <password> command."
         self.dbinit()
         self.pinKeyboardUpdate(1)
         self.updateInit()
-        
+        self.asistan()
 
     def updateInit(self):
-        updater = Updater(self.tid, use_context=True)
-        updater.dispatcher.add_handler(CommandHandler('start', self.start, run_async=True))
-        updater.dispatcher.add_handler(CommandHandler('pinadd', self.pinadd, run_async=True))
-        updater.dispatcher.add_handler(CommandHandler('pinlist', self.pin_list, run_async=True))
-        updater.dispatcher.add_handler(CommandHandler('pindelete', self.pinDelete, run_async=True))
-        updater.dispatcher.add_handler(CommandHandler('userdelete', self.user_delete, run_async=True))
-        updater.dispatcher.add_handler(CommandHandler('userlist', self.userList, run_async=True))
-        updater.dispatcher.add_handler(CommandHandler('rename', self.rename, run_async=True))
-        updater.dispatcher.add_handler(CommandHandler('restart', self.restart, run_async=True))
-        updater.dispatcher.add_handler(CommandHandler('photo', self.photo, run_async=True))
-        updater.dispatcher.add_handler(CommandHandler('alarmstart', self.alarmstart, run_async=True))
-        updater.dispatcher.add_handler(CommandHandler('alarmstop', self.alarmstop, run_async=True))
-        updater.dispatcher.add_handler(CommandHandler('temp',self.temp, run_async=True))
-        updater.dispatcher.add_handler(CommandHandler('code', self.code, run_async=True))
-        updater.dispatcher.add_handler(CommandHandler('commands', self.commands, run_async=True))
-        updater.dispatcher.add_handler(CommandHandler('libupdate', self.libupdate, run_async=True))
-        updater.dispatcher.add_handler(CommandHandler('alwayswatch', self.alwayswatch, run_async=True))
-        updater.dispatcher.add_handler(CallbackQueryHandler(self.button, run_async=True))
-        updater.dispatcher.add_handler(CommandHandler('help',self.help_command, run_async=True))
-        updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, self.emsg, run_async=True))
-        updater.start_polling()
-        updater.idle()
+        """Run the bot."""
+        # Create the Application and pass it your bot's token.
+        application = Application.builder().token(self.tid).build()
+
+        application.add_handler(CommandHandler("start", self.start))
+        application.add_handler(CommandHandler("pinadd", self.pinadd))
+        application.add_handler(CommandHandler("pinlist", self.pin_list))
+        application.add_handler(CommandHandler("pindelete", self.pinDelete))
+        application.add_handler(CommandHandler("userdelete", self.user_delete))
+        application.add_handler(CommandHandler("userlist", self.userList))
+        application.add_handler(CommandHandler("rename", self.rename))
+        application.add_handler(CommandHandler("restart", self.restart))
+        application.add_handler(CommandHandler("photo", self.photo))
+        application.add_handler(CommandHandler("alarmstart", self.alarmstart))
+        application.add_handler(CommandHandler("alarmstop", self.alarmstop))
+        application.add_handler(CommandHandler("temp", self.temp))
+        application.add_handler(CommandHandler("code", self.code))
+        application.add_handler(CommandHandler("commands", self.commands))
+        application.add_handler(CommandHandler("libupdate", self.libupdate))
+        application.add_handler(CommandHandler("asistan", self.asistan))
+        application.add_handler(CommandHandler("login", self.login))
+        application.add_handler(CommandHandler(
+            "asistan_stop", self.asistan_stop))
+        application.add_handler(CommandHandler(
+            "alwayswatch", self.alwayswatch))
+        application.add_handler(CommandHandler("help", self.help_command))
+        application.add_handler(MessageHandler(
+            filters.TEXT & ~filters.COMMAND, self.emsg))
+
+        # Run the bot until the user presses Ctrl-C
+        application.run_polling()
 
     def dbinit(self):
         if(not os.path.isfile("ra.sqlite")):
@@ -61,7 +76,7 @@ class set:
             im.execute("CREATE TABLE alarm (id,state)")
             im.execute("CREATE TABLE language (lcode,data)")
 
-    def saveUser(self,id,name):
+    def saveUser(self, id, name):
         db = sql.connect('ra.sqlite')
         im = db.cursor()
         im.execute("INSERT INTO users VALUES ('"+str(id)+"', '"+name+"')")
@@ -76,14 +91,14 @@ class set:
         db.close()
         return data
 
-    def renameUser(self,id,name):
+    def renameUser(self, id, name):
         db = sql.connect('ra.sqlite')
         im = db.cursor()
         im.execute("UPDATE users SET name = '"+name+"' WHERE id='"+str(id)+"'")
         db.commit()
         db.close()
 
-    def isLogin(self,id):
+    def isLogin(self, id):
         db = sql.connect('ra.sqlite')
         im = db.cursor()
         im.execute("SELECT * FROM users where id = '"+str(id)+"'")
@@ -93,40 +108,41 @@ class set:
             return True
         else:
             return False
-    
-    def savePin(self,data):
+
+    def savePin(self, data):
         data = data.split(" ")
         if len(data) > 1:
             db = sql.connect('ra.sqlite')
             im = db.cursor()
-            im.execute("INSERT INTO pins VALUES ('"+str(data[2])+"', '"+str(data[1])+"','F')")
+            im.execute("INSERT INTO pins VALUES ('" +
+                       str(data[2])+"', '"+str(data[1])+"','F')")
             db.commit()
             db.close()
             return True
-        else: 
+        else:
             return False
 
-    def deletePin(self,id,query):
+    def deletePin(self, id, query):
         db = sql.connect('ra.sqlite')
         im = db.cursor()
         im.execute("SELECT * FROM pins where id = '"+str(id)+"'")
         data = im.fetchone()
         im.execute("DELETE FROM pins WHERE id = '"+str(id)+"'")
-        query.edit_message_text(text= data[1] + " deleted.".format(query.data))
+        query.edit_message_text(text=data[1] + " deleted.".format(query.data))
         db.commit()
         db.close()
 
-    def deleteUser(self,id,query):
+    def deleteUser(self, id, query):
         db = sql.connect('ra.sqlite')
         im = db.cursor()
         im.execute("SELECT * FROM users where id = '"+str(id)+"'")
         data = im.fetchone()
         im.execute("DELETE FROM users WHERE id = '"+str(id)+"'")
-        query.edit_message_text(text= data[1] + " deleted.".format(query.data))
+        query.edit_message_text(text=data[1] + " deleted.".format(query.data))
         db.commit()
         db.close()
 
-    def updatePinState(self,id,query):
+    def updatePinState(self, id, query):
         db = sql.connect('ra.sqlite')
         im = db.cursor()
         im.execute("SELECT * FROM pins where id = '"+str(id)+"'")
@@ -136,27 +152,32 @@ class set:
             stt = "T"
             try:
                 GPIO.output(int(data[0]), GPIO.HIGH)
-                query.edit_message_text(text=data[1] + " opened.".format(query.data))
+                query.edit_message_text(
+                    text=data[1] + " opened.".format(query.data))
             except Exception as e:
                 print("GPIO Set Error")
-                query.edit_message_text("Something went wrong.".format(query.data))
+                query.edit_message_text(
+                    "Something went wrong.".format(query.data))
         elif (data[2] == 'T'):
             stt = "F"
             try:
                 GPIO.output(int(data[0]), GPIO.LOW)
-                query.edit_message_text(text=data[1] + " closed.".format(query.data))
-                im.execute("UPDATE pins SET state = '"+stt+"' WHERE id='"+str(id)+"'")
+                query.edit_message_text(
+                    text=data[1] + " closed.".format(query.data))
+                im.execute("UPDATE pins SET state = '" +
+                           stt+"' WHERE id='"+str(id)+"'")
             except Exception as e:
                 print("GPIO Set Error")
-                query.edit_message_text("Something went wrong.".format(query.data))
+                query.edit_message_text(
+                    "Something went wrong.".format(query.data))
         try:
-            im.execute("UPDATE pins SET state = '"+stt+"' WHERE id='"+str(id)+"'")
+            im.execute("UPDATE pins SET state = '" +
+                       stt+"' WHERE id='"+str(id)+"'")
         except Exception as e:
             print("Save Database Error ! ")
         db.commit()
         db.close()
-            
-    
+
     def readPins(self):
         db = sql.connect('ra.sqlite')
         im = db.cursor()
@@ -173,17 +194,19 @@ class set:
                     GPIO.output(int(i[0]), GPIO.HIGH)
                 else:
                     GPIO.output(int(i[0]), GPIO.LOW)
-        except Exception  as e:
+        except Exception as e:
             print(e)
         return data
 
-    def pinKeyboardUpdate(self,id):
+    def pinKeyboardUpdate(self, id):
         i_counter = 0
         pin_temp = []
         self.pins = []
-        dpin  = self.readPins()
+        dpin = self.readPins()
         for pin in dpin:
-            pin_temp = pin_temp + [InlineKeyboardButton(pin[1], callback_data= str(id) +"#"+pin[0])]
+            pin_temp = pin_temp + \
+                [InlineKeyboardButton(
+                    pin[1], callback_data=str(id) + "#"+pin[0])]
             i_counter += 1
             if i_counter == 3:
                 self.pins = self.pins + [pin_temp]
@@ -193,14 +216,16 @@ class set:
                 self.pins = self.pins + [pin_temp]
                 pin_temp = []
                 i_counter = 0
-    
-    def userKeyboardUpdate(self,id):
+
+    def userKeyboardUpdate(self, id):
         i_counter = 0
         pin_temp = []
         self.users = []
-        dpin  = self.readUsers()
+        dpin = self.readUsers()
         for pin in dpin:
-            pin_temp = pin_temp + [InlineKeyboardButton(pin[1] +" / "+ pin[0], callback_data= str(id) +"#"+pin[0])]
+            pin_temp = pin_temp + \
+                [InlineKeyboardButton(
+                    pin[1] + " / " + pin[0], callback_data=str(id) + "#"+pin[0])]
             i_counter += 1
             if i_counter == 2:
                 self.users = self.users + [pin_temp]
@@ -211,93 +236,107 @@ class set:
                 pin_temp = []
                 i_counter = 0
 
-    def start(self,update, context):
-        if self.login(update, context):
+    async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if self.isLogin(update.effective_chat.id):
             self.pinKeyboardUpdate(1)
             keyboard = self.pins
             reply_markup = InlineKeyboardMarkup(keyboard)
-            update.message.reply_text(
+            await update.message.reply_text(
                 'Please choose:', reply_markup=reply_markup)
+        else:
+            await update.message.reply_text(self.loginErrortext)
 
-    def emsg(self,update, context):
-        if self.login(update, context):
+    async def emsg(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if self.isLogin(update.effective_chat.id):
             msg = update.message.text
             if len(msg) == 1:
                 self.pinKeyboardUpdate(1)
                 keyboard = self.pins
                 reply_markup = InlineKeyboardMarkup(keyboard)
-                update.message.reply_text(
+                await update.message.reply_text(
                     'Please choose:', reply_markup=reply_markup)
+        else:
+            await update.message.reply_text(self.loginErrortext)
 
-    def login(self,update, context):
+    async def login(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if self.isLogin(update.effective_chat.id):
             return True
-        elif self.password == update.message.text:
-            self.saveUser(update.effective_chat.id,"-")
-            update.message.reply_text("Login Succesfully")
+        elif self.password == update.message.text.split(" ")[1]:
+            self.saveUser(update.effective_chat.id, "-")
+            await update.message.reply_text("Login Succesfully")
             return True
         else:
-            update.message.reply_text("Wrong Password")
-            update.message.reply_text("Try Again")
+            await update.message.reply_text("Wrong Password")
+            await update.message.reply_text("Try Again")
             return False
 
-    def button(self,update, context):
-        if self.login(update, context):
+    async def button(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if self.isLogin(update.effective_chat.id):
             query = update.callback_query
-            query.answer() # str(query.data)
+            query.answer()  # str(query.data)
             aa = query.data.split("#")
             if (aa[0] == "1"):
-                self.updatePinState(aa[1],query)
+                self.updatePinState(aa[1], query)
             elif (aa[0] == "2"):
-                self.deletePin(aa[1],query)
+                self.deletePin(aa[1], query)
             elif (aa[0] == "3"):
-                self.deleteUser(aa[1],query)
+                self.deleteUser(aa[1], query)
 
-    def help_command(self,update, context):
-        update.message.reply_text("Creator: Alpaslan Tetik\nhttps://t.me/raspauto")
+    async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        await update.message.reply_text(
+            "Creator: Alpaslan Tetik\nhttps://t.me/raspauto")
 
-    def commands(self,update, context):
-        update.message.reply_text("https://github.com/aattk/raspauto#telegram-bot-commands")
+    async def commands(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        await update.message.reply_text(
+            "https://github.com/aattk/raspauto#telegram-bot-commands")
 
-    def restart(self,update, context):
-        if self.login(update, context):
+    async def restart(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if self.isLogin(update.effective_chat.id):
             try:
                 GPIO.cleanup()
-                update.message.reply_text("Reboot Now")
+                await update.message.reply_text("Reboot Now")
                 os.system("reboot")
             except Exception as e:
                 print("All Pins Cleaned.")
 
-    def temp(self,update, context):
-        if self.login(update, context):
+    async def temp(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if self.isLogin(update.effective_chat.id):
             try:
-                data = subprocess.check_output('/opt/vc/bin/vcgencmd measure_temp', shell=True)
-                update.message.reply_text(str(data)[2:13])
+                data = subprocess.check_output(
+                    '/opt/vc/bin/vcgencmd measure_temp', shell=True)
+                await update.message.reply_text(str(data)[2:13])
             except Exception as e:
                 print("Error temp Function")
-                update.message.reply_text("Temp Error")
+                await update.message.reply_text("Temp Error")
+        else:
+            await update.message.reply_text(self.loginErrortext)
 
-    def libupdate(self,update, context):
-        if self.login(update, context):
+    async def libupdate(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if self.isLogin(update.effective_chat.id):
             try:
-                direct_output = subprocess.check_output('pip3 install raspauto --upgrade', shell=True)
-                update.message.reply_text(direct_output.decode('utf-8'))
-                update.message.reply_text("Please Reboot /restart")
+                direct_output = subprocess.check_output(
+                    'pip3 install raspauto --upgrade', shell=True)
+                await update.message.reply_text(direct_output.decode('utf-8'))
+                await update.message.reply_text("Please Reboot /restart")
             except Exception as e:
                 print("Error Update Function")
-                update.message.reply_text("Something went wrong.")
+                await update.message.reply_text("Something went wrong.")
+        else:
+            await update.message.reply_text(self.loginErrortext)
 
-    def pinadd(self,update, context):
-        if self.login(update, context):
+    async def pinadd(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if self.isLogin(update.effective_chat.id):
             if self.savePin(update.message.text):
-                update.message.reply_text("Successfully added")
+                await update.message.reply_text("Successfully added")
             else:
-                update.message.reply_text("Something went wrong.")
-                update.message.reply_text("Example Usage:")
-                update.message.reply_text("/pinadd kitchen 12")
+                await update.message.reply_text("Something went wrong.")
+                await update.message.reply_text("Example Usage:")
+                await update.message.reply_text("/pinadd kitchen 12")
+        else:
+            await update.message.reply_text(self.loginErrortext)
 
-    def code(self,update, context):
-        if self.login(update, context):
+    async def code(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if self.isLogin(update.effective_chat.id):
             cd = update.message.text
             cd = cd[6:]
             try:
@@ -305,72 +344,131 @@ class set:
                 update.message.reply_text(data.decode('utf-8'))
             except Exception as e:
                 print("Code Run Error")
-                update.message.reply_text("Code Run Error")
+                await update.message.reply_text("Code Run Error")
+        else:
+            await update.message.reply_text(self.loginErrortext)
 
-    def pin_list(self,update, context):
-        if self.login(update, context):
+    async def pin_list(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if self.isLogin(update.effective_chat.id):
             data = ""
             for i in self.readPins():
-                data = data +"Name           : " + i[1] + "\nPin Number : "+ i[0] + "\n-----------------------------------------\n" 
-            update.message.reply_text("# Defined Pin List\n-----------------------------------------\n"+data)
-    
-    def userList(self,update, context):
-        if self.login(update, context):
+                data = data + "Name           : " + \
+                    i[1] + "\nPin Number : " + i[0] + \
+                    "\n-----------------------------------------\n"
+            await update.message.reply_text("# Defined Pin List\n-----------------------------------------\n"+data)
+        else:
+            await update.message.reply_text(self.loginErrortext)
+
+    async def userList(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if self.isLogin(update.effective_chat.id):
             data = ""
             for i in self.readUsers():
-                data = data +"Name             : " + i[1] + "\nUser Number : "+ i[0] + "\n-----------------------------------------\n" 
-            update.message.reply_text("# User List\n-----------------------------------------\n"+data)
+                data = data + "Name             : " + \
+                    i[1] + "\nUser Number : " + i[0] + \
+                    "\n-----------------------------------------\n"
+            await update.message.reply_text(
+                "# User List\n-----------------------------------------\n"+data)
+        else:
+            await update.message.reply_text(self.loginErrortext)
 
-    def pinDelete(self,update, context):
-        if self.login(update, context):
+    async def pinDelete(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if self.isLogin(update.effective_chat.id):
             self.pinKeyboardUpdate(2)
             keyboard = self.pins
             reply_markup = InlineKeyboardMarkup(keyboard)
-            update.message.reply_text('Please choose:', reply_markup=reply_markup)
-            update.message.reply_text("Select the pin to do the deletion.")
+            await update.message.reply_text(
+                'Please choose:', reply_markup=reply_markup)
+            await update.message.reply_text("Select the pin to do the deletion.")
+        else:
+            await update.message.reply_text(self.loginErrortext)
 
-    def user_delete(self,update, context):
-        if self.login(update, context):
+    async def user_delete(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if self.isLogin(update.effective_chat.id):
             self.userKeyboardUpdate(3)
             keyboard = self.users
             reply_markup = InlineKeyboardMarkup(keyboard)
-            update.message.reply_text('Please choose:', reply_markup=reply_markup)
-            update.message.reply_text("Select the user to do the deletion.")
-    
-    def rename(self,update, context):
-        if self.login(update,context):
-            self.renameUser(update.effective_chat.id,update.message.text.split(" ")[1])
-            update.message.reply_text("Renaming is successful.")
+            await update.message.reply_text(
+                'Please choose:', reply_markup=reply_markup)
+            await update.message.reply_text("Select the user to do the deletion.")
+        else:
+            await update.message.reply_text(self.loginErrortext)
 
-    def photo(self,update, context):
-        if self.login(update, context):
+    async def rename(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if self.isLogin(update.effective_chat.id):
+            self.renameUser(update.effective_chat.id,
+                            update.message.text.split(" ")[1])
+            await update.message.reply_text("Renaming is successful.")
+        else:
+            await update.message.reply_text(self.loginErrortext)
+
+    async def photo(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if self.isLogin(update.effective_chat.id):
             with picamera.PiCamera() as camera:
                 camera.start_preview()
                 time.sleep(4)
                 camera.capture('raspauto.jpg')
                 camera.stop_preview()
             time.sleep(2)
-            update.message.reply_photo(photo=open('raspauto.jpg', 'rb'), timeout=240)
-    
-    def alarmstart(self,update,context):
+            await update.message.reply_photo(photo=open(
+                'raspauto.jpg', 'rb'), timeout=240)
+        else:
+            await update.message.reply_text(self.loginErrortext)
+
+    async def alarmstart(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         self.alarm = True
         self.alarmpeople = update
-        Thread(target = self.peopleTracer).start()
+        Thread(target=self.peopleTracer).start()
 
-    def alarmstop(self,update,context):
+    async def alarmstop(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         self.alarm = False
 
-    def alwayswatch(self,update,context):
+    async def alwayswatch(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         self.awatch = ~self.awatch
-        self.aupdate = update;
-        self.acontext = context;        
-        self.alwaysphoto(self.aupdate,self.acontext)
-        update.message.reply_text(f"Always Watch {self.awatch}")
+        self.aupdate = update
+        self.acontext = context
+        self.alwaysphoto(self.aupdate, self.acontext)
+        await update.message.reply_text(f"Always Watch {self.awatch}")
 
-    def alwaysphoto(self,update,context):
+    async def alwaysphoto(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         try:
-            while self.awatch:  
-                self.photo(self.aupdate,self.acontext)
+            while self.awatch:
+                self.photo(self.aupdate, self.acontext)
                 print("Fotograf Gonderildi.")
         except Exception as e:
             print(f"Bir hata olsutu. {e}")
+
+    def speak(self, message):
+        tts = gTTS(text=message, lang='tr')
+        tts.save("audio.mp3")
+        os.system("audio.mp3")
+
+    def recordAudio(self):
+        r = sr.Recognizer()
+        with sr.Microphone() as source:
+            print("Say something!")
+            audio = r.listen(source)
+        data = ""
+        try:
+            data = r.recognize_google(audio, language='tr-tr')
+            data = data.lower()
+        except sr.UnknownValueError:
+            print("Google Speech Recognition could not understand audio")
+        return data
+
+    async def asistan(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        while(self.asistan_state):
+            data = self.recordAudio()
+            self.komut_olustur(data)
+        self.asistan_state = True
+
+    async def asistan_stop(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        self.asistan_state = False
+        await update.message.reply_text(f"Assistant turned off.")
+
+    def komut_olustur(self, data):
+        for i in self.readPins():
+            if i[1].lower() in data:
+                if "aç" in data:
+                    self.speak(f"{i[1]} açıldı.")
+                elif "kapat" in data:
+                    self.speak(f"{i[1]} kapatıldı.")
