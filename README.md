@@ -102,6 +102,10 @@ sudo reboot
 ||||
 
 ## Version List
+#### version 0.3.1 29/05/2023
+- The dependent library lists have been updated.
+- Minor bug fixes were made.
+
 #### version 0.2.2.x 18/05/2021 22:26
 - Database has been used.
 - Pin and user deletion has been updated.
